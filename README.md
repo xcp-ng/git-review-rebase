@@ -68,6 +68,7 @@
     - [That does change subsequent values](#that-does-change-subsequent-values)
   - [Function prototype changes](#function-prototype-changes)
   - [Finalizing](#finalizing)
+- [Documentation](#documentation)
 - [Development environments](#development-environments)
 
 <!-- markdown-toc end -->
@@ -2138,6 +2139,10 @@ From this point, you can follow our regular process to make a kernel release.
 > [!NOTE]
 >
 > [TODO] Add link to instruction on our process
+
+# Documentation
+
+See [`doc/README.md`](doc/README.md) for architecture diagrams and other documentation.
 
 # Development environments
 
