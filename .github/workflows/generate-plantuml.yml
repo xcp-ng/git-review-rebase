@@ -1,0 +1,37 @@
+name: Generate PlantUML
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - 'doc/**.puml'
+
+permissions:
+  contents: write
+
+jobs:
+  generate_plantuml:
+    runs-on: ubuntu-latest
+    name: plantuml
+    steps:
+    - name: checkout
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        persist-credentials: false
+
+    - name: install plantuml
+      run: sudo apt-get install -y plantuml
+
+    - name: generate diagrams
+      run: |
+        find doc -name "*.puml" | while read f; do
+          arch=$(basename "$(dirname "$f")")
+          mkdir -p "doc/generated/$arch"
+          plantuml -tsvg -o "$(realpath "doc/generated/$arch")" "$f"
+        done
+
+    - name: upload diagrams
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: plantuml-diagrams
+        path: doc/generated/
