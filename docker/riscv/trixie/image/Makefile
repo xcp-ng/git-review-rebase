@@ -58,7 +58,7 @@ GDB_ARGS += \
 	-ex "b start_xen" \
 	-ex "c"
 
-.PHONY: all clean help initrd-tools dist-tools dist-xen dist build-tools build-xen build go go-debug gdb initrd create-common-dirs create-tools-dirs install
+.PHONY: all clean help initrd-tools install-tools install-xen install build-tools build-xen build go go-debug gdb initrd create-common-dirs create-tools-dirs
 
 help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | \
@@ -97,45 +97,43 @@ create-tools-dirs: create-common-dirs
 
 # --- Build targets ---
 
-# Uses the Xen top-level dist-tools (no -j bypass): replicating it requires
-# running install-tools-public-headers first, which adds complexity.
-dist-tools: $(XEN_CONFIGURE_OUT) ## Build and install Xen tools to /dist
-	$(XEN_MAKE) dist-tools
-
-# Use sub-make to preserve parallel build (-j$(nproc) not propagated by top-level Xen build)
-dist-xen: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build and install Xen hypervisor to /dist
-	$(MAKE) -C $(XEN_ROOT)/xen install DESTDIR=$(XEN_ROOT) -j$(nproc)
-
-dist: dist-tools dist-xen ## Build and install both tools and Xen to /dist
-
-# Uses the Xen top-level build-tools (no -j bypass): same rationale as dist-tools.
 build-tools: $(XEN_CONFIGURE_OUT) ## Build Xen tools
 	$(XEN_MAKE) build-tools
 
-# Use sub-make to preserve parallel build (-j$(nproc) not propagated by top-level Xen build)
 build-xen: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build Xen hypervisor
-	$(MAKE) -C $(XEN_ROOT)/xen -j$(nproc)
+	$(XEN_MAKE) build-xen
 
-build: build-tools build-xen ## Build both Xen tools and hypervisor
+build: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build Xen hypervisor and tools
+	$(XEN_MAKE) build SUBSYSTEMS="xen tools"
 
-install: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT)
-	$(MAKE) -C $(XEN_ROOT) install SUBSYSTEM="xen tools" DESTDIR=$(INITRD_DIR) -j$(nproc)
+# --- Install targets ---
+
+install-tools: $(XEN_CONFIGURE_OUT) ## Build and install Xen tools to INITRD_DIR
+	$(XEN_MAKE) install-tools DESTDIR=$(INITRD_DIR)
+
+install-xen: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build and install Xen hypervisor to INITRD_DIR
+	$(XEN_MAKE) install-xen DESTDIR=$(INITRD_DIR)
+
+install: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build and install Xen hypervisor and tools to INITRD_DIR
+	$(XEN_MAKE) install DESTDIR=$(INITRD_DIR) SUBSYSTEMS="xen tools"
 
 # --- Initrd targets ---
 
-initrd: $(INITRD_STAMP) create-common-dirs ## Create basic initrd image
+initrd: $(INITRD_STAMP) install-xen create-common-dirs ## Create basic initrd image
 	echo "Building initrd image"
 	printf '%s\n' \
 	'#!/bin/sh' \
 	'echo "Hello RISC-V World!"' \
 	'mount -t proc proc /proc' \
 	'mount -t xenfs xenfs /proc/xen' \
+	'mkdir -p /dev/pts/' \
+	'mount -t devpts devpts /dev/pts' \
 	'mount -t sysfs sysfs /sys' \
 	'exec /bin/sh' \
 	> $(RCS_FILE) && \
 	chmod +x $(RCS_FILE)
 	cp $(RCS_FILE) $(INITRD_DIR)/etc/init.d/
-	genext2fs -b 6500 -N 1024 -U -d $(INITRD_DIR)/ $(INITRD)
+	genext2fs -b 10000 -N 1024 -U -d $(INITRD_DIR)/ $(INITRD)
 
 initrd-tools: install create-tools-dirs ## Create initrd with Xen tools included
 	echo "Building initrd with tools image"

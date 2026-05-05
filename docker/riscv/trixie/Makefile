@@ -83,17 +83,9 @@ run: ## Boot Xen + dom0 in QEMU
 	$(DOCKER) -p 1234:1234 $(IMAGE) \
 		/bin/bash -c "make $(INITRD) && make go"
 
-run-rebuild: ## Rebuild Xen hypervisor, then boot
-	$(DOCKER) -p 1234:1234 $(IMAGE) \
-		/bin/bash -c "make build-xen && make $(INITRD) && make go"
-
 debug: ## Boot Xen in QEMU, wait for GDB on port 1234
 	$(DOCKER) -p 1234:1234 $(IMAGE) \
 		/bin/bash -c "make $(INITRD) && make go-debug"
-
-debug-rebuild: ## Rebuild Xen, then boot in GDB-wait mode
-	$(DOCKER) -p 1234:1234 $(IMAGE) \
-		/bin/bash -c "make build-xen && make $(INITRD) && make go-debug"
 
 # VMLINUX is optional: without it, GDB loads Xen symbols only.
 gdb: ## Attach GDB (TUI) to a running Xen instance
