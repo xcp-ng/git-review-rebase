@@ -2,12 +2,15 @@ name: Generate PlantUML
 on:
   push:
     branches:
-      - '**'
+      - 'main'
+    paths:
+      - 'doc/**.puml'
+  pull_request:
     paths:
       - 'doc/**.puml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   generate_plantuml:
