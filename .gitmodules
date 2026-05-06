@@ -265,3 +265,6 @@
 [submodule "driver-disks"]
 	path = driver-disks
 	url = git@github.com:xcp-ng/driver-disks.git
+[submodule "docker/riscv/linux-xen-riscv"]
+	path = docker/riscv/linux-xen-riscv
+	url = git@github.com:baptleduc/linux-xen-riscv.git

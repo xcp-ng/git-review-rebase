@@ -58,7 +58,7 @@ Edit `config.mk` to configure your local environment.
 ### Pre-built kernel
 
 The default `Image.gz` is pulled from [`baptleduc/xen-riscv64-kernel`](https://hub.docker.com/r/baptleduc/xen-riscv64-kernel).
-It is built from [`baptleduc/linux-xen-riscv`](https://github.com/baptleduc/linux-xen-riscv/tree/6.18-xen-guest-support),
+It is built from the [`linux-xen-riscv`](../linux-xen-riscv) submodule,
 a patched Linux tree adding RISC-V Xen guest support.
 Versioned tags follow the `vX.X.X-xen-riscv` scheme.
 
