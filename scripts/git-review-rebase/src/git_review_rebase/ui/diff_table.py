@@ -197,8 +197,14 @@ class DiffPrettyRowMaker:
             line[self.middle_point + self.right_first_char_index :],
         )
 
-        self.right_diff.parse_line(right_diff_line)
-        self.left_diff.parse_line(left_diff_line)
+        match middle_char:
+            case ">":
+                self.right_diff.parse_line(right_diff_line)
+            case "<":
+                self.left_diff.parse_line(left_diff_line)
+            case _:
+                self.right_diff.parse_line(right_diff_line)
+                self.left_diff.parse_line(left_diff_line)
 
         left, middle, right = await self.stylicize(left_diff_line, middle_char, right_diff_line)
         return cell(left), middle, cell(right)
