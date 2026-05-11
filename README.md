@@ -11,6 +11,7 @@
   - [Pull and get all sub-modules](#pull-and-get-all-sub-modules)
   - [Add the new RPM repo as sub-module](#add-the-new-rpm-repo-as-sub-module)
   - [Refreshing the kabi.locked_list file](#refreshing-the-kabilocked_list-file)
+  - [Refresh the driver list](#refresh-the-driver-list)
   - [Add the source sub-module](#add-the-source-sub-module)
   - [Open your PR](#open-your-pr)
 - [Upgrading kernel to latest upstream](#upgrading-kernel-to-latest-upstream)
@@ -1070,7 +1071,7 @@ Most of the time, those kABI changes are easy to neutralize because we can
 simply hide the new header inclusion from `genksyms`, e.g.:
 
 ```diff
-commit 2427dabb9445232d7ae0004846d45b66f0c3c628
+commit c1c4751972df480cbbc96e035232f1f9548bc0a4
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Fri Feb 27 14:04:01 2026 +0100
 
@@ -1145,7 +1146,7 @@ for `genksyms`, such that no kABI changes are recorded by `genksyms`.
 
 The fix:
 ```diff
-commit c327be40dc1cb1f4fc11799929b27f8035146a65
+commit 8f25d540805bc0841bf26a79a5fd5808e1da72b3
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Tue Feb 24 10:36:00 2026 +0100
 
@@ -1155,7 +1156,7 @@ Date:   Tue Feb 24 10:36:00 2026 +0100
     Signed-off-by: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 
 diff --git a/kernel/sched/sched.h b/kernel/sched/sched.h
-index 55e695080fc6..24dc6c2f449e 100644
+index 55e695080fc6..f63912914a81 100644
 --- a/kernel/sched/sched.h
 +++ b/kernel/sched/sched.h
 @@ -337,6 +337,15 @@ struct cfs_bandwidth {
@@ -1163,17 +1164,32 @@ index 55e695080fc6..24dc6c2f449e 100644
         s64                     hierarchical_quota;
 
 +#ifdef __GENKSYMS__
-+       typedef u64 runtime_expires;
++       u64 runtime_expires;
 +       int expires_seq;
 +#else
 +       /* Removed in: 502bd151448c sched/fair: Fix low cpu usage with high throttling by removing expiration of cpu-local slices */
-+       typedef u64 __unused_runtime_expires;
++       u64 __unused_runtime_expires;
 +       int __unused_expires_seq;
 +#endif
 +
         short                   idle;
         short                   period_active;
         struct hrtimer          period_timer;
+@@ -555,6 +564,16 @@ struct cfs_rq {
+
+ #ifdef CONFIG_CFS_BANDWIDTH
+ 	int			runtime_enabled;
++
++#ifdef __GENKSYMS__
++	int expires_seq;
++	u64 runtime_expires;
++#else
++	/* Removed in: 502bd151448c sched/fair: Fix low cpu usage with high throttling by removing expiration of cpu-local slices */
++	int __unused_expires_seq;
++	u64 __unused_runtime_expires;
++#endif
++
+ 	s64			runtime_remaining;
 ```
 
 ## Struct field addition
@@ -1228,7 +1244,7 @@ We can then simply move the new field inside the hole, to make sure that no
 other offsets are modified, and hide the new field from genksyms:
 
 ```diff
-commit acf336abedfd3926c3cc1de4b6bc0b3bb7c7a2b7
+commit 8a523d6dd958cbf6a19a3239a7fbfe04189c6400
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Tue Feb 24 10:56:20 2026 +0100
 
@@ -1318,7 +1334,7 @@ defensive measure, we add a compile assertion that the old definition of
 the struct is indeed of the same size as the new definition:
 
 ```diff
-commit 6921d60f8a2afbd09a7e3febad099f64d7abe9bc
+commit 8c9da98f43a21dd323dc9815963fcf252ce4cdcd
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Thu Feb 26 14:26:52 2026 +0100
 
@@ -1331,7 +1347,7 @@ Date:   Thu Feb 26 14:26:52 2026 +0100
     Signed-off-by: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 
 diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 483303adf3df..78cc818d9916 100644
+index 483303adf3df..807f2ab06ef7 100644
 --- a/include/net/sch_generic.h
 +++ b/include/net/sch_generic.h
 @@ -2,6 +2,7 @@
@@ -1356,7 +1372,7 @@ index 483303adf3df..78cc818d9916 100644
 +#endif
  };
 
-+static inline void kabi_check_struct_Qdisk_size(void)
++void kabi_check_struct_Qdisk_size(void)
 +{
 +	struct old_Qdisc {
 +		int 			(*enqueue)(struct sk_buff *skb,
@@ -1409,24 +1425,6 @@ moment to see if the commit introducing this difficult change is a
 must-have, sometimes it might be okay to simply revert the commit if it
 doesn't bring anything interesting.
 
-One example commit that simply got reverted: `4523b6cac7bc ("linux/bits.h:
-make BIT(), GENMASK(), and friends available in assembly")` in:
-
-``` diff
-commit e15dc9455b9762581107f6bb0cba9aa20202ac91
-Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
-Date:   Tue Feb 24 14:54:39 2026 +0100
-
-    !kabi Revert: linux/bits.h: make BIT(), GENMASK(), and friends available in assembly
-
-    This is causing tons of genksyms changes because of 1UL being changed
-    to (((1UL))) and brings no improvements, as no assembly code is using those
-    macros in our code-base.  Simply revert the change.
-
-    Reverts: 4523b6cac7bc ("linux/bits.h: make BIT(), GENMASK(), and friends available in assembly")
-    Signed-off-by: Quentin Casasnovas <quentin.casasnovas@vates.tech>
-```
-
 If we really want the commit (it might be improving performances somewhere
 we want, or is a security fix), there are usually two options, a code
 change or using the [shadow live patching
@@ -1439,7 +1437,71 @@ Sometimes, the data structure modifications are not strictly required in
 order to implement the change, in that case, we can modify the code to
 avoid the data structure changes altogether.
 
-As an example commit: `aa90302e3189 ("net: sched: update default qdisc
+One example: `4523b6cac7bc ("linux/bits.h: make BIT(), GENMASK(), and
+friends available in assembly")`.  The commit caused genksyms changes
+because `1UL` gets written as `(((1UL)))` in C code, while its goal was to
+make the macros also usable in assembly.  The fix avoids kABI changes by
+defining the old-style macros directly for C code, while only pulling in the
+`_BITUL`-style macros from `linux/const.h` for assembly:
+
+``` diff
+commit 21a9cddd60b030bf3c881dc910d22e38429a1d3f
+Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
+Date:   Tue Feb 24 14:54:39 2026 +0100
+
+    !kabi linux/bits.h: make BIT(), GENMASK(), and friends available in assembly
+
+    This is causing tons of genksyms changes because of 1UL being changed
+    to (((1UL))) in various C code - instead only use the changed macros in
+    assembly code.
+
+    Fixes: 4523b6cac7bc ("linux/bits.h: make BIT(), GENMASK(), and friends available in assembly")
+    Signed-off-by: Quentin Casasnovas <quentin.casasnovas@vates.tech>
+
+diff --git a/include/linux/bits.h b/include/linux/bits.h
+index 669d69441a62..dfc1b99f6904 100644
+--- a/include/linux/bits.h
++++ b/include/linux/bits.h
+@@ -2,6 +2,30 @@
+ #ifndef __LINUX_BITS_H
+ #define __LINUX_BITS_H
+
++#ifndef __ASSEMBLY__
++#include <asm/bitsperlong.h>
++
++#define BIT(nr)			(1UL << (nr))
++#define BIT_ULL(nr)		(1ULL << (nr))
++#define BIT_MASK(nr)		(1UL << ((nr) % BITS_PER_LONG))
++#define BIT_WORD(nr)		((nr) / BITS_PER_LONG)
++#define BIT_ULL_MASK(nr)	(1ULL << ((nr) % BITS_PER_LONG_LONG))
++#define BIT_ULL_WORD(nr)	((nr) / BITS_PER_LONG_LONG)
++#define BITS_PER_BYTE		8
++
++/*
++ * Create a contiguous bitmask starting at bit position @l and ending at
++ * position @h. For example
++ * GENMASK_ULL(39, 21) gives us the 64bit vector 0x000000ffffe00000.
++ */
++#define GENMASK(h, l) \
++	(((~0UL) - (1UL << (l)) + 1) & (~0UL >> (BITS_PER_LONG - 1 - (h))))
++
++#define GENMASK_ULL(h, l) \
++	(((~0ULL) - (1ULL << (l)) + 1) & \
++	 (~0ULL >> (BITS_PER_LONG_LONG - 1 - (h))))
++#else
++
+ #include <linux/const.h>
+ #include <asm/bitsperlong.h>
+
+@@ -26,4 +50,5 @@
+ 	(((~ULL(0)) - (ULL(1) << (l)) + 1) & \
+ 	 (~ULL(0) >> (BITS_PER_LONG_LONG - 1 - (h))))
+
++#endif
+ #endif	/* __LINUX_BITS_H */
+```
+
+As a more complex example: `aa90302e3189 ("net: sched: update default qdisc
 visibility after Tx queue cnt changes")`.
 
 It adds a new function pointer into an ops struct, which has no padding nor
@@ -1450,7 +1512,7 @@ callback if they are in use:
 
 
 ``` diff
-commit 4f84f934ea88437d01bc7d0d77ddce9d474714e8
+commit 7730b09d513ce58870126f38156e6efcb1dbf680
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Thu Feb 26 15:28:49 2026 +0100
 
@@ -1473,7 +1535,7 @@ Date:   Thu Feb 26 15:28:49 2026 +0100
     Signed-off-by: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 
 diff --git a/include/net/sch_generic.h b/include/net/sch_generic.h
-index 78cc818d9916..305543f478ef 100644
+index 807f2ab06ef7..30e296d2b527 100644
 --- a/include/net/sch_generic.h
 +++ b/include/net/sch_generic.h
 @@ -277,9 +277,13 @@ struct Qdisc_ops {
@@ -1494,7 +1556,7 @@ index 78cc818d9916..305543f478ef 100644
  	int			(*dump_stats)(struct Qdisc *, struct gnet_dump *);
 
 diff --git a/net/sched/sch_generic.c b/net/sched/sch_generic.c
-index 25324701bdf1..b86642cb3552 100644
+index 28e289c91455..b524c3265a1e 100644
 --- a/net/sched/sch_generic.c
 +++ b/net/sched/sch_generic.c
 @@ -11,6 +11,7 @@
@@ -1509,7 +1571,7 @@ index 25324701bdf1..b86642cb3552 100644
  	return 0;
  }
 
-+void mq_qdisc_change_real_num_tx(struct Qdisc *, unsigned int);
++void mq_change_real_num_tx(struct Qdisc *sch, unsigned int new_real_tx);
 +
 +struct Qdisc_ops *kabi_mqprio_qdisc_ops = NULL;
 +EXPORT_SYMBOL(kabi_mqprio_qdisc_ops);
@@ -1524,7 +1586,7 @@ index 25324701bdf1..b86642cb3552 100644
 -	if (qdisc->ops->change_real_num_tx)
 -		qdisc->ops->change_real_num_tx(qdisc, new_real_tx);
 +	if (qdisc->ops == &mq_qdisc_ops) {
-+		mq_qdisc_change_real_num_tx(qdisc, new_real_tx);
++		mq_change_real_num_tx(qdisc, new_real_tx);
 +	}
 +
 +	if (kabi_mqprio_qdisc_ops != NULL
@@ -1535,7 +1597,7 @@ index 25324701bdf1..b86642cb3552 100644
 
  int dev_qdisc_change_tx_queue_len(struct net_device *dev)
 diff --git a/net/sched/sch_mq.c b/net/sched/sch_mq.c
-index 0ab13a495af9..bc24bb782aa5 100644
+index 0ab13a495af9..e282a2578885 100644
 --- a/net/sched/sch_mq.c
 +++ b/net/sched/sch_mq.c
 @@ -130,7 +130,7 @@ static void mq_attach(struct Qdisc *sch)
@@ -1635,7 +1697,7 @@ The fix removes the field from the struct and use shadow live patching to
 dynamically allocate the field separately:
 
 ``` diff
-commit 82593816fc415b9bb4dfff2dea4eb029ece8f57c
+commit 0cf93d99b29704eac78a318c7b811f36167ca468
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Thu Feb 26 16:30:34 2026 +0100
 
@@ -1775,7 +1837,7 @@ in struct trace_event_call")`
 Here we can simply hide the change from `genksyms`:
 
 ```diff
-commit b1cc3ada2c31b1cc66c3954fa53bbd5f8003435b
+commit d7b548a23bb32d7498b7c6571debc0d24404d42f
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Tue Feb 24 11:14:11 2026 +0100
 
@@ -1837,7 +1899,7 @@ without having an effect on either its own offset within the struct, nor to
 the next field offsets.  The fix:
 
 ```diff
-commit 61951e312e8f044b6c8a62941df8370bc348e59e
+commit 0ae48f75b664986e55b8779b75fcc8e2f16699ca
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Sat Jan 31 16:18:10 2026 +0100
 
@@ -1890,7 +1952,7 @@ Date:   Sat Jan 31 16:18:10 2026 +0100
     Signed-off-by: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 
 diff --git a/crypto/asymmetric_keys/signature.c b/crypto/asymmetric_keys/signature.c
-index 28198314bc39..d94cd7345f9e 100644
+index 28198314bc39..41cb637b9766 100644
 --- a/crypto/asymmetric_keys/signature.c
 +++ b/crypto/asymmetric_keys/signature.c
 @@ -66,3 +66,27 @@ int verify_signature(const struct key *key,
@@ -1898,7 +1960,7 @@ index 28198314bc39..d94cd7345f9e 100644
  }
  EXPORT_SYMBOL_GPL(verify_signature);
 +
-+int kabi_check_struct_public_key(void)
++void kabi_check_struct_public_key(void)
 +{
 +       struct old_public_key_signature {
 +               struct asymmetric_key_id *auth_ids[2];
@@ -2034,7 +2096,7 @@ This can safely be hidden from `genksyms` without fear of breaking modules
 dependant on that enum:
 
 ```diff
-commit c3fb1ca2f1f901425cc2c7d202afef2d49c52489
+commit ed7898d47d918f59f326ad1fcd3645bdc1677eab
 Author: Quentin Casasnovas <quentin.casasnovas@vates.tech>
 Date:   Thu Feb 26 11:04:08 2026 +0100
 
