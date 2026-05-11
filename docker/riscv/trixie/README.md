@@ -62,7 +62,8 @@ It is built from [`baptleduc/linux-xen-riscv`](https://github.com/baptleduc/linu
 a patched Linux tree adding RISC-V Xen guest support.
 Versioned tags follow the `vX.X.X-xen-riscv` scheme.
 
-To use a locally built kernel instead, set `KERNEL` in `config.mk`.
+To override the bundled kernel, set `KERNEL` in `config.mk` to any pre-built `Image.gz`.
+To build one from source, use `make build-kernel KERNEL_SRC=<path>` (see [Boot Xen with a locally built kernel](#boot-xen-with-a-locally-built-kernel)).
 
 ## Usage
 
@@ -75,6 +76,7 @@ make <target> [INITRD=initrd|initrd-tools]
 | Target          | Description                                          |
 |-----------------|------------------------------------------------------|
 | `setup`         | Register QEMU binfmt emulators (once after reboot)   |
+| `build-kernel`  | Cross-compile `Image.gz` from `KERNEL_SRC` source tree |
 | `build-image`   | Build the Docker image locally from `image/`         |
 | `shell`         | Open an interactive shell in the container           |
 | `run`           | Boot Xen + dom0 in QEMU                              |
@@ -104,20 +106,23 @@ make run INITRD=initrd-tools
 make run
 ```
 
-### Boot Xen with a locally built kernel
+### Boot Xen with a custom kernel
 
-Build the kernel from [`baptleduc/linux-xen-riscv`](https://github.com/baptleduc/linux-xen-riscv/tree/6.18-xen-guest-support):
+Set `KERNEL` in `config.mk` to any pre-built `Image.gz`:
 
-```sh
-make ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j$(nproc) xen_defconfig Image.gz
+```makefile
+# config.mk
+KERNEL := $(HOME)/path/to/Image.gz
 ```
 
-Then set `KERNEL` in `config.mk` and run:
+```sh
+make run
+```
+
+To build a kernel from source, use the `build-kernel` target with your Linux source tree so it can cross-compiles `Image.gz` using `tuxmake/riscv_gcc-14` (no local toolchain needed):
 
 ```sh
-# In config.mk:
-# KERNEL := $(HOME)/path/to/linux/arch/riscv/boot/Image.gz
-make run
+make build-kernel KERNEL_SRC=$(HOME)/path/to/linux
 ```
 
 ### Rebuild Xen and boot
