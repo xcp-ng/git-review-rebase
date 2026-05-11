@@ -68,7 +68,7 @@ end note
 
 xen -> xen  : set evtchn_pending bit\nguest_test_and_set_bit(port, shared_info.evtchn_pending)
 xen -> xen  : set evtchn_pending_sel\nguest_test_and_set_bit(word, vcpu_info.evtchn_pending_sel)
-xen -> xen  : vcpu_mark_events_pending(d1v0)\n  set hvip.IRQ_VS_EVTCHN in vcpu struct\n  vcpu_kick(d1v0)
+xen -> xen  : vcpu_mark_events_pending(d1v0)\n  set vcpu->arch.hvip.IRQ_VS_EVTCHN\n  vcpu_kick(d1v0)
 
 alt d1v0 running on pcpu1 (is_running=true)
     xen -> xen  : smp_send_event_check_mask(pcpu1)\n→ sbi_send_ipi()\n→ OpenSBI sets mip.SSIP on pcpu1
@@ -78,7 +78,7 @@ alt d1v0 running on pcpu1 (is_running=true)
       csr_clear(sip, SSIP)
       leave_hypervisor_to_guest()
         → context_restore_csrs()
-        → csr_write(HVIP, hvip | IRQ_VS_EVTCHN)
+        → csr_write(HVIP, vcpu->arch.hvip)
       sret → VS-mode with virtual interrupt pending
     end note
 else d1v0 blocked (is_running=false)
