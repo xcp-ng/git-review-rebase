@@ -26,7 +26,7 @@ XEN_MAKE := $(MAKE) -C $(XEN_ROOT) -j$(nproc)
 
 QEMU_BASE_FLAGS = \
 	-M virt,aclint=off,aia=aplic-imsic,aia-guests=7 \
-	-cpu rv64,smstateen=on \
+	-cpu rv64,smstateen=on,sstc=off\
 	-bios $(OPENSBI) \
 	-smp 2 \
 	-nographic \
@@ -58,7 +58,7 @@ GDB_ARGS += \
 	-ex "b start_xen" \
 	-ex "c"
 
-.PHONY: all clean help initrd-tools dist-tools dist-xen dist build-tools build-xen build go go-debug gdb initrd create-common-dirs create-tools-dirs
+.PHONY: all clean help initrd-tools install-tools install-xen install build-tools build-xen build go go-debug gdb initrd create-common-dirs create-tools-dirs
 
 help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | \
@@ -67,7 +67,7 @@ help: ## Display this help message
 # --- Internal targets ---
 
 $(XEN_CONFIGURE_OUT): $(XEN_ROOT)/configure
-	cd $(XEN_ROOT) && ./configure --host=riscv64-linux-gnu
+	cd $(XEN_ROOT) && ./configure --prefix=/usr --host=riscv64-linux-gnu
 
 $(XEN_CONFIG):
 	cp $(CONFIGS_DIR)/.config $(XEN_CONFIG)
@@ -97,47 +97,46 @@ create-tools-dirs: create-common-dirs
 
 # --- Build targets ---
 
-# Uses the Xen top-level dist-tools (no -j bypass): replicating it requires
-# running install-tools-public-headers first, which adds complexity.
-dist-tools: $(XEN_CONFIGURE_OUT) ## Build and install Xen tools to /dist
-	$(XEN_MAKE) dist-tools
-
-# Use sub-make to preserve parallel build (-j$(nproc) not propagated by top-level Xen build)
-dist-xen: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build and install Xen hypervisor to /dist
-	$(MAKE) -C $(XEN_ROOT)/xen install DESTDIR=$(XEN_ROOT)/dist/install -j$(nproc)
-
-dist: dist-tools dist-xen ## Build and install both tools and Xen to /dist
-
-# Uses the Xen top-level build-tools (no -j bypass): same rationale as dist-tools.
 build-tools: $(XEN_CONFIGURE_OUT) ## Build Xen tools
 	$(XEN_MAKE) build-tools
 
-# Use sub-make to preserve parallel build (-j$(nproc) not propagated by top-level Xen build)
 build-xen: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build Xen hypervisor
-	$(MAKE) -C $(XEN_ROOT)/xen -j$(nproc)
+	$(XEN_MAKE) build-xen
 
-build: build-tools build-xen ## Build both Xen tools and hypervisor
+build: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build Xen hypervisor and tools
+	$(XEN_MAKE) build SUBSYSTEMS="xen tools"
+
+# --- Install targets ---
+
+install-tools: $(XEN_CONFIGURE_OUT) ## Build and install Xen tools to INITRD_DIR
+	$(XEN_MAKE) install-tools DESTDIR=$(INITRD_DIR)
+
+install-xen: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build and install Xen hypervisor to INITRD_DIR
+	$(XEN_MAKE) install-xen DESTDIR=$(INITRD_DIR)
+
+install: $(XEN_CONFIG) $(XEN_CONFIGURE_OUT) ## Build and install Xen hypervisor and tools to INITRD_DIR
+	$(XEN_MAKE) install DESTDIR=$(INITRD_DIR) SUBSYSTEMS="xen tools"
 
 # --- Initrd targets ---
 
-initrd: $(INITRD_STAMP) create-common-dirs ## Create basic initrd image
+initrd: $(INITRD_STAMP) install-xen create-common-dirs ## Create basic initrd image
 	echo "Building initrd image"
 	printf '%s\n' \
 	'#!/bin/sh' \
 	'echo "Hello RISC-V World!"' \
 	'mount -t proc proc /proc' \
 	'mount -t xenfs xenfs /proc/xen' \
+	'mkdir -p /dev/pts/' \
+	'mount -t devpts devpts /dev/pts' \
 	'mount -t sysfs sysfs /sys' \
 	'exec /bin/sh' \
 	> $(RCS_FILE) && \
 	chmod +x $(RCS_FILE)
 	cp $(RCS_FILE) $(INITRD_DIR)/etc/init.d/
-	genext2fs -b 6500 -N 1024 -U -d $(INITRD_DIR)/ $(INITRD)
+	genext2fs -b 10000 -N 1024 -U -d $(INITRD_DIR)/ $(INITRD)
 
-initrd-tools: dist-tools create-tools-dirs ## Create initrd with Xen tools included
+initrd-tools: install create-tools-dirs ## Create initrd with Xen tools included
 	echo "Building initrd with tools image"
-	cp -r $(XEN_ROOT)/dist/* $(INITRD_DIR)/dist/
-	mv $(INITRD_DIR)/dist/install/usr/local/lib/* $(INITRD_DIR)/lib/
 	printf '%s\n' \
 	'#!/bin/sh' \
 	'echo "Hello RISC-V World!"' \
@@ -147,10 +146,10 @@ initrd-tools: dist-tools create-tools-dirs ## Create initrd with Xen tools inclu
 	'mount -t devpts devpts /dev/pts' \
 	'mount -t sysfs sysfs /sys' \
 	'export LIBXL_DEBUG_DUMP_DTB="/var/log/xen/debug_dump_dt.dtb"' \
-	'./dist/install/usr/local/sbin/xenstored' \
-	'./dist/install/usr/local/sbin/xenconsoled' \
-	'sleep 1' \
-	'./lib/xen/bin/xen-init-dom0' \
+	'xenstored' \
+	'xenconsoled -vvvv' \
+	'sleep 0.5' \
+	'/usr/lib/xen/bin/xen-init-dom0' \
 	'exec /bin/sh' \
 	> $(RCS_FILE) && \
 	chmod +x $(RCS_FILE)
