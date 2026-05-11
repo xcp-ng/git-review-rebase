@@ -68,7 +68,7 @@ end note
 
 xen -> xen  : set evtchn_pending bit\nguest_test_and_set_bit(port, shared_info.evtchn_pending)
 xen -> xen  : set evtchn_pending_sel\nguest_test_and_set_bit(word, vcpu_info.evtchn_pending_sel)
-xen -> xen  : vcpu_mark_events_pending(d1v0)\n  set vcpu->arch.hvip.IRQ_VS_EVTCHN\n  vcpu_kick(d1v0)
+xen -> xen  : vcpu_mark_events_pending(d1v0)\n  set vcpu->arch.hvip.IRQ_VS_EVTCHN\n  vcpu_kick(d1v0)\n vcpu_unblock(d1v0)
 
 alt d1v0 running on pcpu1 (is_running=true)
     xen -> xen  : smp_send_event_check_mask(pcpu1)\n→ sbi_send_ipi()\n→ OpenSBI sets mip.SSIP on pcpu1
@@ -82,7 +82,7 @@ alt d1v0 running on pcpu1 (is_running=true)
       sret → VS-mode with virtual interrupt pending
     end note
 else d1v0 blocked (is_running=false)
-    xen -> xen  : vcpu_unblock(d1v0)\n→ null_unit_wake()\n→ cpu_raise_softirq(pcpu1, SCHEDULE_SOFTIRQ)\n→ sbi_send_ipi() wakes pcpu1 idle WFI\n→ scheduler runs d1v0\n→ context_restore_csrs() writes HVIP
+    xen -> xen  : vcpu_unblock(d1v0)\n→ vcpu_wake()\n→ sched_wake() [s->wake(), scheduler callback]\n→ cpu_raise_softirq(SCHEDULE_SOFTIRQ)\n→ sbi_send_ipi() wakes pcpu1 idle WFI\n→ scheduler runs d1v0\n→ context_restore_csrs() writes HVIP
 end
 
 xen --> domu : virtual interrupt delivered\n(hvip.IRQ_VS_EVTCHN → vsip.SSIP in VS-mode)
