@@ -159,11 +159,13 @@ initrd-tools: install create-tools-dirs ## Create initrd with Xen tools included
 # --- Run targets ---
 
 go: $(INITRD) $(KERNEL) $(QEMU) $(OPENSBI) $(XEN_BIN) $(DTB_SCRIPT) ## Launch Xen with dom0 in QEMU
+	@echo "Using Linux kernel: $(KERNEL)"
 	cd $(DTB_DIR) && \
 	bash $(DTB_SCRIPT) dom0-domU-test $(DTB_DIR) $(OPENSBI) $(QEMU) $(XEN_BIN) $(KERNEL) $(INITRD)
 	$(QEMU) $(QEMU_BASE_FLAGS)
 
 go-debug: $(INITRD) $(KERNEL) $(QEMU) $(OPENSBI) $(XEN_BIN) $(DTB_SCRIPT) ## Launch Xen in QEMU with GDB server waiting on port 1234
+	@echo "Using Linux kernel: $(KERNEL)"
 	cd $(DTB_DIR) && \
 	bash $(DTB_SCRIPT) dom0-domU-test $(DTB_DIR) $(OPENSBI) $(QEMU) $(XEN_BIN) $(KERNEL) $(INITRD)
 	$(QEMU) $(QEMU_BASE_FLAGS) $(QEMU_DEBUG_FLAGS)

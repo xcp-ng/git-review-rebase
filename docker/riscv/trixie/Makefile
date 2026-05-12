@@ -11,8 +11,8 @@
 
 -include config.mk
 
-ifndef XEN_HOST
-$(error XEN_HOST is not set. Copy config.mk.example to config.mk and fill in your paths.)
+ifndef XEN_SRC
+$(error XEN_SRC is not set. Copy config.mk.example to config.mk and fill in your paths.)
 endif
 
 IMAGE ?= baptleduc/xen-riscv64-trixie:latest
@@ -25,9 +25,8 @@ XEN_DIR   := $(BUILD_DIR)/xen
 
 DOCKER := docker run --rm -it \
 	--platform linux/amd64 \
-	-v "$(XEN_HOST)":$(XEN_DIR)
+	-v "$(XEN_SRC)":$(XEN_DIR)
 
-# Override the pre-compiled kernel bundled in the Docker image
 ifdef KERNEL
 ifeq ($(wildcard $(KERNEL)),)
 $(error KERNEL file not found: $(KERNEL))
@@ -51,7 +50,7 @@ ifneq ($(filter $(INITRD),$(VALID_INITRD)),$(INITRD))
 $(error INITRD must be one of: $(VALID_INITRD) (got '$(INITRD)'))
 endif
 
-.PHONY: help setup build-image shell run run-rebuild debug debug-rebuild gdb gdb-rebuild clean
+.PHONY: help setup build-kernel build-image shell run run-rebuild debug debug-rebuild gdb gdb-rebuild clean
 
 help: ## Show this help message
 	@echo "Targets:"
@@ -62,13 +61,20 @@ help: ## Show this help message
 	@echo "  INITRD=initrd        Minimal initrd (default)"
 	@echo "  INITRD=initrd-tools  Initrd with Xen tools included"
 	@echo "  IMAGE=<tag>          Docker image (default: $(IMAGE))"
-	@echo "  KERNEL=<path>        Local kernel binary, overrides the image default"
+	@echo "  KERNEL=<path>        Pre-built kernel image, overrides the bundled one"
 	@echo "  VMLINUX=<path>       Path to vmlinux, enables kernel symbols in GDB"
 	@echo ""
 	@echo "Local config: config.mk (copy from config.mk.example)"
 
 setup: ## Register QEMU binfmt emulators (run once after each reboot)
 	docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+build-kernel: ## Build local Linux kernel (requires KERNEL_SRC=<path>)
+ifndef KERNEL_SRC
+	$(error KERNEL_SRC is not set. Set it in config.mk.)
+endif
+	docker run --rm -v "$(KERNEL_SRC)":/build/linux tuxmake/riscv_gcc-14 \
+		/bin/bash -c "make -C /build/linux ARCH=riscv CROSS_COMPILE=riscv64-linux-gnu- -j$$(nproc) xen_defconfig Image.gz"
 
 build-image: ## Build the Docker image locally from image/
 	docker buildx build --platform linux/amd64 -f image/Dockerfile -t $(IMAGE) image/

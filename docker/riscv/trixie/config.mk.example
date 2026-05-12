@@ -7,7 +7,7 @@
 # ==============================================================================
 
 # Path to the Xen source tree on your machine (required)
-XEN_HOST := $(HOME)/Documents/Vates/xen
+XEN_SRC := $(HOME)/Documents/Vates/xen
 
 # Docker image to use (optional, defaults to baptleduc/xen-riscv64-trixie:latest).
 # Override to use a locally built image (e.g. after make build-image).

@@ -4,7 +4,8 @@
 # syntax=docker/dockerfile:1
 
 # Images imports
-FROM baptleduc/xen-riscv64-kernel:6.18 AS kernel-riscv64
+ARG KERNEL_IMAGE_TAG=latest
+FROM baptleduc/xen-riscv64-kernel:${KERNEL_IMAGE_TAG} AS kernel-riscv64
 FROM registry.gitlab.com/xen-project/people/olkur/xen/tests-artifacts/qemu-system-riscv64:8.2.0-aia-riscv64 AS qemu-aia-riscv64
 
 FROM debian:trixie-slim AS dtc-riscv64
