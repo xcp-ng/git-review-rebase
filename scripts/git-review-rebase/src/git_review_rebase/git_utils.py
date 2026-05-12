@@ -86,9 +86,12 @@ def patchids(
     """Return a dict[Commit] -> Patchid."""
     global _repo, _commit_by_patchid_str
     _repo = repo
-    with multiprocessing.Manager() as manager:
+    # Use 'fork' explicitly: forkserver (Python 3.14+ default) fails with -1 fds
+    # when Manager() is called from within asyncio.to_thread().
+    ctx = multiprocessing.get_context("fork")
+    with ctx.Manager() as manager:
         _commit_by_patchid_str = manager.dict()
-        with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+        with ctx.Pool(multiprocessing.cpu_count()) as p:
             p.starmap(
                 patchid_map_fn,
                 # Oids objects cannot be pickled so use string representation
