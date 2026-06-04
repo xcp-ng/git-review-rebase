@@ -6,7 +6,7 @@ import pygit2
 
 from .branch_range import BranchRange
 from .constants import CommitMatchInfoFlag
-from .git_utils import commit_title
+from .git_utils import abbrev, commit_title
 
 
 class RebasedCommitMatch:
@@ -19,6 +19,13 @@ class RebasedCommitMatch:
         self.left_commit = left_commit
         self.right_commit = right_commit
         self.match_info = match_info
+
+    def __repr__(self) -> str:
+        return (
+            f"RebasedCommitMatch(left_commit={abbrev(self.left_commit.id)}, "
+            f"right_commit={abbrev(self.right_commit.id)}, "
+            f"match_info={str(self.match_info)}"
+        )
 
 
 class RebasedCommitsMatches:
