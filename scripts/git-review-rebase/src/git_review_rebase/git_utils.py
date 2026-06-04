@@ -37,7 +37,7 @@ def range_log(
 
 def commit_title(commit: pygit2.Commit) -> str:
     """Given a Commit object, return the commit title."""
-    return commit.message.splitlines()[0]
+    return (commit.message.splitlines() or [""])[0]
 
 
 def cached_patchid_ref(revision: str) -> str:
