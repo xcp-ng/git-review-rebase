@@ -14,6 +14,20 @@ An interactive TUI (Terminal User Interface) tool for reviewing rebased git bran
 - Flexible filtering by commit match types
 - Possibility to add notes to dropped commits
 
+### Commit match icons
+
+  | Icon | Meaning                                   |
+  | ---- | ----------------------------------------- |
+  | `=`  | Same commit (identical SHA1               |
+  | `≈`  | Loose match (same title, patchid changed) |
+  | `⤶`  | Already present in new upstream           |
+  | `✗`  | Dropped during rebase                     |
+  | `✚`  | Added in rebase                           |
+
+> **Patchid** is a checksum of a commit's diff (`git patch-id`). Two commits with different
+> SHA1 (e.g. after rebase) that introduce the same code changes will have the same patchid.
+> This allows the tool to match commits across a rebase even when their SHA-1s change.
+
 ## Installation
 
 ### From source
