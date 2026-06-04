@@ -46,7 +46,7 @@ commit_match_info_repr = {
     ),
     CommitMatchInfoFlag.LooseMatch: CommitMatchInfo(
         CommitMatchInfoFlag.LooseMatch,
-        Text("≈", SolarizedColors.Yellow),
+        Text("~", SolarizedColors.Yellow),
         "Commit patchid has changed",
     ),
     CommitMatchInfoFlag.PresentInRebaseOnto: CommitMatchInfo(

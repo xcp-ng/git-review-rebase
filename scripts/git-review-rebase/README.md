@@ -19,7 +19,7 @@ An interactive TUI (Terminal User Interface) tool for reviewing rebased git bran
   | Icon | Meaning                                   |
   | ---- | ----------------------------------------- |
   | `=`  | Same commit (identical SHA1               |
-  | `≈`  | Loose match (same title, patchid changed) |
+  | `~`  | Loose match (same title, patchid changed) |
   | `⤶`  | Already present in new upstream           |
   | `✗`  | Dropped during rebase                     |
   | `✚`  | Added in rebase                           |
