@@ -344,17 +344,21 @@ class DiffTable(DataTable):
             NamedTemporaryFile(mode="w+t") as left_diff_path,
             NamedTemporaryFile(mode="w+t") as right_diff_path,
         ):
-            if self.left_commit:
-                subprocess.run(
-                    build_show_cmd(left_commit),
-                    stdout=left_diff_path,
+
+            def run_show(commit, tmp_file):
+                result = subprocess.run(
+                    build_show_cmd(commit),
+                    capture_output=True,
+                    text=True,
                 )
+                tmp_file.write(result.stdout)
+                tmp_file.flush()
+
+            if self.left_commit:
+                run_show(left_commit, left_diff_path)
 
             if self.right_commit:
-                subprocess.run(
-                    build_show_cmd(self.right_commit),
-                    stdout=right_diff_path,
-                )
+                run_show(self.right_commit, right_diff_path)
 
             cmd = ["diff", "-y", f"-W{self.width}", "-t", left_diff_path.name, right_diff_path.name]
 
