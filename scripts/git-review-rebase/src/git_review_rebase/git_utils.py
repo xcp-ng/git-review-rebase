@@ -2,6 +2,7 @@
 
 import multiprocessing
 import re
+from itertools import chain
 from multiprocessing.managers import DictProxy
 
 import pygit2
@@ -100,12 +101,17 @@ def patchids(
         return dict(_commit_by_patchid_str)
 
 
-_CHERRY_PICK_RE = re.compile(r"\(cherry picked from commit ([0-9a-f]{40})\)")
+_CHERRY_PICK_PATTERNS = [
+    re.compile(r"\(cherry picked from commit ([0-9a-f]{40})\)"),
+    re.compile(r"[Cc]ommit ([0-9a-f]{40}) [Uu]pstream"),
+]
 
 
 def cherry_pick_parents(commit: pygit2.Commit) -> list[str]:
     """Return sha1 strings from '(cherry picked from commit ...)' lines in commit message."""
-    return _CHERRY_PICK_RE.findall(commit.message)
+    return list(
+        chain.from_iterable(pattern.findall(commit.message) for pattern in _CHERRY_PICK_PATTERNS)
+    )
 
 
 def abbrev(oid: pygit2.Oid):

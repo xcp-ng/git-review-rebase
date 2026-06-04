@@ -21,9 +21,14 @@ class RebasedCommitMatch:
         self.match_info = match_info
 
     def __repr__(self) -> str:
+        lc_rep = rc_rep = "None"
+        if self.left_commit is not None:
+            lc_rep = abbrev(self.left_commit.id)
+        if self.right_commit is not None:
+            rc_rep = abbrev(self.right_commit.id)
         return (
-            f"RebasedCommitMatch(left_commit={abbrev(self.left_commit.id)}, "
-            f"right_commit={abbrev(self.right_commit.id)}, "
+            f"RebasedCommitMatch(left_commit={lc_rep}, "
+            f"right_commit={rc_rep}, "
             f"match_info={str(self.match_info)}"
         )
 
