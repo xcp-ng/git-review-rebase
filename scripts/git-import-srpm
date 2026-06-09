@@ -260,7 +260,7 @@ function load_author_and_title() {
 function export_author() {
     export GIT_COMMITTER_NAME="Vates Git Importer"
     export GIT_COMMITTER_EMAIL="gitimporter@vates.tech"
-    export GIT_COMMITTER_DATE="1519512702"
+    export GIT_COMMITTER_DATE="1519512702 +0100"
 
     # These are simply default values in case the information is not
     # present inside the patch file - it allows idempotent runs as well.
@@ -313,7 +313,7 @@ function apply_patch() {
         fi
 
         # This one is used when we fallback to plain git commit
-        export GIT_AUTHOR_DATE="1442642982"
+        export GIT_AUTHOR_DATE="1442642982 +0100"
         if [[ -s ${git_dir}/rebase-apply/msg ]]; then
 
             load_author_and_title "${patch}" "${git_dir}"
