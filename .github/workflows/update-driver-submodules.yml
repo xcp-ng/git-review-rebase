@@ -67,7 +67,7 @@ jobs:
                 git checkout --orphan source/8.3
                 git rm -rf
                 git commit -s --allow-empty -m "Initial commit."
-                git push origin source/8.3
+                #git push origin source/8.3
                 git checkout ${cur_rev}
                 #   actually do the import now
                 branch=$(OOT_DRIVER_IMPORT=y ../../../../scripts/git-import-srpm HEAD | sed -n 's/.*Constructing \([^ ]\+\) from rev HEAD/\1/p')
@@ -76,7 +76,7 @@ jobs:
                 # Push the source branch and update source sub-module
                 cd "$src_submodule"
                 git checkout $branch^0
-                git push origin $branch
+                #git push origin $branch
                 missing_sources+=("$src_submodule")
 
                 cd -
@@ -95,7 +95,7 @@ jobs:
                   # Sources are stale, refresh them from the above import
                   git checkout $branch^0
                   # And push them
-                  git push -f origin ${branch} ${branch%patched}source
+                  #git push -f origin ${branch} ${branch%patched}source
                   updated_sources+=("$src_submodule")
                 fi
                 cd -
