@@ -30,6 +30,8 @@ jobs:
           missing_sources=()
           updated_sources=()
 
+          set -x
+
           for submodule in drivers/8.3/srpm/*/; do
             submodule="${submodule%/}"
             src_submodule="${submodule/srpm/source}"

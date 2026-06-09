@@ -409,6 +409,7 @@ exit_code=$?
 if [[ ${exit_code} -ne 0 ]]; then
     echo "Error at line:${LAST_LINE} '\''${BASH_COMMAND}'\'' exited with code ${exit_code}"
     echo "  Log file: ${COMMAND_LOGS}"
+    cat ${COMMAND_LOGS}
     if [[ -z "${DONT_DELETE_TMP_DIR:-}" ]]; then
         echo "  You can re-run the script with DONT_DELETE_TMP_DIR=y to look around in the temporary worktree."
     else

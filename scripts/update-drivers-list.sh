@@ -1,6 +1,7 @@
 #!/bin/bash -eu
 
 set -o pipefail
+set -x
 
 DRIVERS_DIR="$(dirname "$0")/../drivers/"
 DRIVER_DISKS_DIR="$(dirname "$0")/../driver-disks/"
