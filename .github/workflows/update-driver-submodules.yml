@@ -20,6 +20,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
+      - name: Install rpm
+        run: |
+          sudo apt-get install -y rpm
+
       - name: Update driver submodules to origin/8.3
         id: update
         run: |
@@ -102,7 +106,6 @@ jobs:
       - name: Regenerate drivers/README.md
         if: steps.update.outputs.updated == 'true'
         run: |
-          sudo apt-get install -y rpm
           scripts/update-drivers-list.sh
 
       - name: Commit and open PR
