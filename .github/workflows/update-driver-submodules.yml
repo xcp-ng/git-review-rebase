@@ -85,6 +85,8 @@ jobs:
                 if [ "$(git rev-parse HEAD)" != "$(git rev-parse $branch)" ]; then
                   # Sources are stale, refresh them from the above import
                   git checkout $branch^0
+                  # And push them
+                  git push -f origin ${branch} ${branch%patched}source
                   updated_sources+=("$src_submodule")
                 fi
                 cd -
