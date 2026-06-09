@@ -115,7 +115,7 @@ jobs:
       - name: Regenerate drivers/README.md
         if: steps.update.outputs.updated == 'true'
         run: |
-          scripts/update-drivers-list.sh
+          ./scripts/update-drivers-list.sh
 
       - name: Commit and open PR
         if: steps.update.outputs.updated == 'true'
