@@ -116,7 +116,7 @@ jobs:
           git config user.email "gitimporter@vates.tech"
 
           git checkout -b "$branch"
-          git add drivers/8.3
+          git add drivers/
           git commit -s -m "drivers: update submodules and corresponding sources to latest 8.3 branch"
 
           # Force-push so a re-run on the same day updates the existing branch.
