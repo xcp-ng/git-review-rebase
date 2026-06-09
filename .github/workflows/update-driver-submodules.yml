@@ -19,6 +19,10 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install rpm
+        run: |
+          sudo apt-get install -y rpm
+
       - name: Update driver submodules to origin/8.3
         id: update
         run: |
