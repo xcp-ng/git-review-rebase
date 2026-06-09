@@ -127,12 +127,21 @@ jobs:
             {
               echo "Automated daily update of driver submodules to the latest \`8.3\` branch."
               echo ""
-              echo "Updated submodules:"
-              sed 's/^/- /' /tmp/updated-submodules.txt
-              echo "Added source submodules:"
-              sed 's/^/- /' /tmp/missing-sources.txt
-              echo "Updated source submodules:"
-              sed 's/^/- /' /tmp/updated-sources.txt
+              test -f /tmp/updated-submodules.txt && {
+                echo "Updated submodules:"
+                sed 's/^/- /' /tmp/updated-submodules.txt
+                echo ""
+              }
+              test -f /tmp/missing-sources.txt && {
+                echo "Added source submodules:"
+                sed 's/^/- /' /tmp/missing-sources.txt
+                echo ""
+              }
+              test -f /tmp/updated-sources.txt && {
+                echo "Updated source submodules:"
+                sed 's/^/- /' /tmp/updated-sources.txt
+                echo ""
+              }
             } > /tmp/pr-body.txt
 
             gh pr create \
