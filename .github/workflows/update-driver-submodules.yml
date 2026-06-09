@@ -24,6 +24,13 @@ jobs:
         run: |
           sudo apt-get install -y rpm
 
+      - name: Configure git credentials for xcp-ng-rpms org
+        env:
+          XCP_NG_RPMS_PAT: ${{ secrets.XCP_NG_RPMS_PAT }}
+        run: |
+          git config --global url."https://x-access-token:${XCP_NG_RPMS_PAT}@github.com/xcp-ng-rpms/".insteadOf "git@github.com:xcp-ng-rpms/"
+          git config --global url."https://x-access-token:${XCP_NG_RPMS_PAT}@github.com/xcp-ng-rpms/".insteadOf "https://github.com/xcp-ng-rpms/"
+
       - name: Update driver submodules to origin/8.3
         id: update
         run: |
