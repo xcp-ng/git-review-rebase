@@ -114,7 +114,7 @@ function get_build_dir() {
     local build_dirname_query_filter
     build_dirname_query_filter='%{name}-%{version}\n'
     if [[ $(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | grep '^%autosetup' ) =~ [[:space:]]-n[[:space:]]+([^[:space:]]+) ]]; then
-	build_dirname_query_filter="${BASH_REMATCH[1]}"
+	build_dirname_query_filter="${BASH_REMATCH[1]}\n"
     fi
 
     local build_dirname
