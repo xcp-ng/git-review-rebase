@@ -53,7 +53,7 @@ jobs:
                 cur_rev=$(git rev-parse HEAD)
                 git checkout --orphan source/8.3
                 git rm -rf
-                git commit --allow-empty -m "Initial commit."
+                git commit -s --allow-empty -m "Initial commit."
                 git push origin source/8.3
                 git checkout ${cur_rev}
                 #   actually do the import now
@@ -115,7 +115,7 @@ jobs:
 
           git checkout -b "$branch"
           git add drivers/8.3
-          git commit -m "drivers: update submodules and corresponding sources to latest 8.3 branch"
+          git commit -s -m "drivers: update submodules and corresponding sources to latest 8.3 branch"
 
           # Force-push so a re-run on the same day updates the existing branch.
           git push --force origin "$branch"
