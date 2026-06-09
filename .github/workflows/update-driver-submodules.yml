@@ -18,6 +18,7 @@ jobs:
           submodules: true
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Update driver submodules to origin/8.3
         id: update
