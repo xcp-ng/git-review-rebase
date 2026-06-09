@@ -61,6 +61,10 @@ fi
 
 GIT_COMMIT_OPTIONS="--no-gpg-sign"
 
+# GitHub runners may use a kernel version that makes rpmspec unhappy (e.g. "6.17.0-1010-azure"
+# contains a double separator). Define a known-good kernel version to avoid parse errors.
+RPM_OPTS=(--define 'kernel_version 4.19.0')
+
 function check_spec_file() {
     local worktree="$1"
     local revision="$2"
@@ -88,7 +92,7 @@ function get_build_dir() {
 
     local build_dirname
     build_dirname=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
-			rpmspec --query --define "_topdir ${worktree}" --qf "${build_dirname_query_filter}" /dev/stdin | \
+			rpmspec --query --define "_topdir ${worktree}" "${RPM_OPTS[@]}" --qf "${build_dirname_query_filter}" /dev/stdin | \
 			awk 'NR == 1'
 		 )
 
@@ -112,7 +116,7 @@ function get_base_version() {
 
     check_spec_file "${worktree}" "${revision}"
 
-    git -C "${worktree}" show "${revision}:${SPEC_FILE}" | rpmspec -P /dev/stdin | awk "/^Version:/{print \"${RELEASE_PREFIX}\" \$NF \"${RELEASE_SUFFIX:-}\"}"
+    git -C "${worktree}" show "${revision}:${SPEC_FILE}" | rpmspec -P "${RPM_OPTS[@]}" /dev/stdin | awk "/^Version:/{print \"${RELEASE_PREFIX}\" \$NF \"${RELEASE_SUFFIX:-}\"}"
 }
 
 function get_release() {
@@ -121,7 +125,7 @@ function get_release() {
 
     check_spec_file "${worktree}" "${revision}"
 
-    git -C "${worktree}" show "${revision}:${SPEC_FILE}" | rpmspec -P /dev/stdin | awk '/^Release:/{print $NF}'
+    git -C "${worktree}" show "${revision}:${SPEC_FILE}" | rpmspec -P "${RPM_OPTS[@]}" /dev/stdin | awk '/^Release:/{print $NF}'
 }
 
 function get_full_version() {
@@ -435,6 +439,7 @@ rpmbuild --nodeps \
          --define "_buildshell /bin/bash" \
          --define "_topdir ${SRPM_REPO_WORKTREE}" \
          --define "_default_patch_fuzz 2" \
+         "${RPM_OPTS[@]}" \
          --eval "%{_default_patch_fuzz}" \
          -bp "${SRPM_REPO_WORKTREE}/${SPEC_FILE}" 2>> "${COMMAND_LOGS}" >> "${COMMAND_LOGS}" &
 RPMBUILD_PID=$!
