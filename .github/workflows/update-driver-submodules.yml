@@ -105,7 +105,7 @@ jobs:
           if [ ${#updated[@]} -gt 0 -o ${#missing_sources[@]} -gt 0 -o ${#updated_sources[@]} -gt 0 ]; then
             echo "updated=true" >> "$GITHUB_OUTPUT"
             printf '%s\n' "${updated[@]}" > /tmp/updated-submodules.txt
-            printf '%s\n' "${missing_sources[@]}" > /tmp/missing_sources.txt
+            printf '%s\n' "${missing_sources[@]}" > /tmp/missing-sources.txt
             printf '%s\n' "${updated_sources[@]}" > /tmp/updated-sources.txt
           else
             echo "No submodules needed updating."
