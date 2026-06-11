@@ -57,7 +57,7 @@ jobs:
               # Missing sources, we need to add the sub-module as well as import its sources
               {
                 # Add the source sub-module
-                git submodule add git@github.com/xcpng-rpms/$(basename "$submodule").git "drivers/8.3/source/$(basename "submodule")"
+                git submodule add git@github.com:xcp-ng-rpms/$(basename "$submodule").git "drivers/8.3/source/$(basename "submodule")"
 
                 # Import the sources
                 cd "$submodule"
