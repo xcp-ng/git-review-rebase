@@ -72,76 +72,76 @@
 	url = git@github.com:xcp-ng-rpms/r8125-module.git
 [submodule "drivers/8.3/source/aqc111u-module"]
 	path = drivers/8.3/source/aqc111u-module
-	url = git@github.com:xcp-ng-rpms/aqc111u-module.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/avago-megaraid-sas"]
 	path = drivers/8.3/source/avago-megaraid-sas
-	url = git@github.com:xcp-ng-rpms/avago-megaraid-sas.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/avago-mpt3sas"]
 	path = drivers/8.3/source/avago-mpt3sas
-	url = git@github.com:xcp-ng-rpms/avago-mpt3sas.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/broadcom-bnxt-en"]
 	path = drivers/8.3/source/broadcom-bnxt-en
-	url = git@github.com:xcp-ng-rpms/broadcom-bnxt-en.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/chelsio-cxgb4"]
 	path = drivers/8.3/source/chelsio-cxgb4
-	url = git@github.com:xcp-ng-rpms/chelsio-cxgb4.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/cisco-enic"]
 	path = drivers/8.3/source/cisco-enic
-	url = git@github.com:xcp-ng-rpms/cisco-enic.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/cisco-fnic"]
 	path = drivers/8.3/source/cisco-fnic
-	url = git@github.com:xcp-ng-rpms/cisco-fnic.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/dell-rbu-module"]
 	path = drivers/8.3/source/dell-rbu-module
-	url = git@github.com:xcp-ng-rpms/dell-rbu-module.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/emulex-lpfc"]
 	path = drivers/8.3/source/emulex-lpfc
-	url = git@github.com:xcp-ng-rpms/emulex-lpfc.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-e1000e"]
 	path = drivers/8.3/source/intel-e1000e
-	url = git@github.com:xcp-ng-rpms/intel-e1000e.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-fm10k"]
 	path = drivers/8.3/source/intel-fm10k
-	url = git@github.com:xcp-ng-rpms/intel-fm10k.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-i40e"]
 	path = drivers/8.3/source/intel-i40e
-	url = git@github.com:xcp-ng-rpms/intel-i40e.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-ice"]
 	path = drivers/8.3/source/intel-ice
-	url = git@github.com:xcp-ng-rpms/intel-ice.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-igb"]
 	path = drivers/8.3/source/intel-igb
-	url = git@github.com:xcp-ng-rpms/intel-igb.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-igc"]
 	path = drivers/8.3/source/intel-igc
-	url = git@github.com:xcp-ng-rpms/intel-igc.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-ixgbe"]
 	path = drivers/8.3/source/intel-ixgbe
-	url = git@github.com:xcp-ng-rpms/intel-ixgbe.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/mellanox-mlnxen"]
 	path = drivers/8.3/source/mellanox-mlnxen
-	url = git@github.com:xcp-ng-rpms/mellanox-mlnxen.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/microsemi-aacraid"]
 	path = drivers/8.3/source/microsemi-aacraid
-	url = git@github.com:xcp-ng-rpms/microsemi-aacraid.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/microsemi-smartpqi"]
 	path = drivers/8.3/source/microsemi-smartpqi
-	url = git@github.com:xcp-ng-rpms/microsemi-smartpqi.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/mpi3mr-module"]
 	path = drivers/8.3/source/mpi3mr-module
-	url = git@github.com:xcp-ng-rpms/mpi3mr-module.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/qlogic-fastlinq"]
 	path = drivers/8.3/source/qlogic-fastlinq
-	url = git@github.com:xcp-ng-rpms/qlogic-fastlinq.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/qlogic-netxtreme2"]
 	path = drivers/8.3/source/qlogic-netxtreme2
-	url = git@github.com:xcp-ng-rpms/qlogic-netxtreme2.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/qlogic-qla2xxx"]
 	path = drivers/8.3/source/qlogic-qla2xxx
-	url = git@github.com:xcp-ng-rpms/qlogic-qla2xxx.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/r8125-module"]
 	path = drivers/8.3/source/r8125-module
-	url = git@github.com:xcp-ng-rpms/r8125-module.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/sfc-module-alt"]
 	path = drivers/8.3/srpm/sfc-module-alt
 	url = git@github.com:xcp-ng-rpms/sfc-module-alt.git
@@ -204,64 +204,64 @@
 	url = git@github.com:xcp-ng-rpms/microsemi-smartpqi-alt.git
 [submodule "drivers/8.3/source/atlantic-module-alt"]
 	path = drivers/8.3/source/atlantic-module-alt
-	url = git@github.com:xcp-ng-rpms/atlantic-module-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/broadcom-bnxt-en-alt"]
 	path = drivers/8.3/source/broadcom-bnxt-en-alt
-	url = git@github.com:xcp-ng-rpms/broadcom-bnxt-en-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/cisco-enic-alt"]
 	path = drivers/8.3/source/cisco-enic-alt
-	url = git@github.com:xcp-ng-rpms/cisco-enic-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/cisco-fnic-alt"]
 	path = drivers/8.3/source/cisco-fnic-alt
-	url = git@github.com:xcp-ng-rpms/cisco-fnic-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/coretemp-module-alt"]
 	path = drivers/8.3/source/coretemp-module-alt
-	url = git@github.com:xcp-ng-rpms/coretemp-module-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/emulex-lpfc-alt"]
 	path = drivers/8.3/source/emulex-lpfc-alt
-	url = git@github.com:xcp-ng-rpms/emulex-lpfc-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-e1000e-alt"]
 	path = drivers/8.3/source/intel-e1000e-alt
-	url = git@github.com:xcp-ng-rpms/intel-e1000e-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-i40e-alt"]
 	path = drivers/8.3/source/intel-i40e-alt
-	url = git@github.com:xcp-ng-rpms/intel-i40e-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-ice-alt"]
 	path = drivers/8.3/source/intel-ice-alt
-	url = git@github.com:xcp-ng-rpms/intel-ice-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-igb-alt"]
 	path = drivers/8.3/source/intel-igb-alt
-	url = git@github.com:xcp-ng-rpms/intel-igb-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/intel-ixgbe-alt"]
 	path = drivers/8.3/source/intel-ixgbe-alt
-	url = git@github.com:xcp-ng-rpms/intel-ixgbe-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/mellanox-mlnxen-alt"]
 	path = drivers/8.3/source/mellanox-mlnxen-alt
-	url = git@github.com:xcp-ng-rpms/mellanox-mlnxen-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/microsemi-smartpqi-alt"]
 	path = drivers/8.3/source/microsemi-smartpqi-alt
-	url = git@github.com:xcp-ng-rpms/microsemi-smartpqi-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/mlx4-modules-alt"]
 	path = drivers/8.3/source/mlx4-modules-alt
-	url = git@github.com:xcp-ng-rpms/mlx4-modules-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/qlogic-fastlinq-alt"]
 	path = drivers/8.3/source/qlogic-fastlinq-alt
-	url = git@github.com:xcp-ng-rpms/qlogic-fastlinq-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/qlogic-netxtreme2-alt"]
 	path = drivers/8.3/source/qlogic-netxtreme2-alt
-	url = git@github.com:xcp-ng-rpms/qlogic-netxtreme2-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/qlogic-qla2xxx-alt"]
 	path = drivers/8.3/source/qlogic-qla2xxx-alt
-	url = git@github.com:xcp-ng-rpms/qlogic-qla2xxx-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/r8169-module-alt"]
 	path = drivers/8.3/source/r8169-module-alt
-	url = git@github.com:xcp-ng-rpms/r8169-module-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/sfc-module-alt"]
 	path = drivers/8.3/source/sfc-module-alt
-	url = git@github.com:xcp-ng-rpms/sfc-module-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "drivers/8.3/source/tg3-module-alt"]
 	path = drivers/8.3/source/tg3-module-alt
-	url = git@github.com:xcp-ng-rpms/tg3-module-alt.git
+	url = git@github.com:xcp-ng/driver-sources.git
 [submodule "driver-disks"]
 	path = driver-disks
 	url = git@github.com:xcp-ng/driver-disks.git
