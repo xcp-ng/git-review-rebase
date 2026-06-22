@@ -37,7 +37,7 @@ PRODUCT="$(basename "${SRPM_REPO_PATH}/SPECS/"*.spec .spec)"
 OOT_DRIVER_IMPORT=${OOT_DRIVER_IMPORT:-}
 CODE_REPO_PATH="${CODE_REPO_PATH:-${SRPM_REPO_PATH}/../${PRODUCT/kernel/linux}/}"
 SPEC_FILE="SPECS/${PRODUCT}.spec"
-if [[ ${PRODUCT} = "kernel" || ${PRODUCT} = "qemu" ]]; then
+if [[ ${PRODUCT} = "kernel" || ${PRODUCT} = "kernel-alt" || ${PRODUCT} = "qemu" ]]; then
     RELEASE_PREFIX="v"
 elif [[ ${PRODUCT} = "xen" ]]; then
     RELEASE_PREFIX="RELEASE-"
