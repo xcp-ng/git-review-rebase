@@ -24,14 +24,41 @@
 #
 #  CODE_REPO_PATH=/path/to/linux/repo SRPM_REPO_PATH=/path/kernel/srpm/repo git-import-srpm XS-8.2.1
 #
-# By default, the SRPM_REPO_PATH is the current working directory.  If no
-# CODE_REPO_PATH is given, a default path is inferred that is
-# SRPM_REPO_PATH/../(linux|xen|qemu) (depending on the product).
+# By default, the SRPM_REPO_PATH is the current working directory. It can also
+# be set using the -s command line option.
+# If no CODE_REPO_PATH is given (by setting the variable or by using the -c
+# command line option, a default path is inferred that is SRPM_REPO_PATH/../(linux|xen|qemu)
+# (depending on the product).
 
 set -o pipefail
 
 THIS_SCRIPT="$(readlink -f "$0")"
 
+function usage() {
+    echo "Usage: $(basename "${THIS_SCRIPT}") [-c CODE_REPO_PATH] [-s SRPM_REPO_PATH] REVISION"
+    exit "${1}"
+}
+
+while getopts ":c:s:h" opt; do
+	case "${opt}" in
+	c)
+        CODE_REPO_PATH="${OPTARG}"
+        ;;
+    s)
+        SRPM_REPO_PATH="${OPTARG}"
+        ;;
+    h|*)
+        if [ "${opt}" = "h" ]; then usage 0; else usage 1; fi
+        ;;
+    esac
+done
+
+shift "$((OPTIND - 1))"
+
+# Fail if no revision given
+[ ${#@} -ne 1 ] && usage 1
+
+SRPM_REPO_REVISION=${1}
 SRPM_REPO_PATH=${SRPM_REPO_PATH:-${PWD}}
 PRODUCT="$(basename "${SRPM_REPO_PATH}/SPECS/"*.spec .spec)"
 OOT_DRIVER_IMPORT=${OOT_DRIVER_IMPORT:-}
@@ -388,8 +415,6 @@ if [[ "$1" = "--all" ]]; then
     import_all_branches
     exit 0
 fi
-
-SRPM_REPO_REVISION=$1
 
 TMPDIR=$(mktemp -d -t src-import-xen-XXX)
 trap 'LAST_LINE=$LINENO' DEBUG
