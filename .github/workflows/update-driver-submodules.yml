@@ -57,7 +57,7 @@ jobs:
               # Missing sources, we need to add the sub-module as well as import its sources
               {
                 # Add the source sub-module
-                git submodule add -b source/8.3 git@github.com:xcp-ng/driver-sources.git "drivers/8.3/source/$(basename "submodule")"
+                git submodule add -b source/8.3 git@github.com:xcp-ng/driver-sources.git "drivers/8.3/source/$(basename "$submodule")"
 
                 # Import the sources
                 cd "$submodule"
