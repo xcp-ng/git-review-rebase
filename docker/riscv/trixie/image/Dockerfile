@@ -6,7 +6,7 @@
 # Images imports
 ARG KERNEL_IMAGE_TAG=latest
 FROM baptleduc/xen-riscv64-kernel:${KERNEL_IMAGE_TAG} AS kernel-riscv64
-FROM registry.gitlab.com/xen-project/people/olkur/xen/tests-artifacts/qemu-system-riscv64:8.2.0-aia-riscv64 AS qemu-aia-riscv64
+FROM registry.gitlab.com/xen-project/people/olkur/xen/tests-artifacts/qemu-system-riscv64:9.0.0-aia-riscv64 AS qemu-aia-riscv64
 
 FROM debian:trixie-slim AS dtc-riscv64
 ENV DEBIAN_FRONTEND=noninteractive
