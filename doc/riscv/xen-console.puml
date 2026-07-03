@@ -6,6 +6,8 @@ skinparam participantPadding 20
 skinparam boxPadding 10
 
 actor       "User"         as user
+participant "dom0\nhvc0 tty\n(drivers/tty/hvc/hvc_xen.c)" as hvc0
+participant "dom0\nxl console\n(tools/xl)" as xlc
 participant "dom0\nxenconsoled\n(tools/console/daemon/io.c)" as xcd
 participant "Xen\nhypervisor\n(xen/common/)" as xen
 participant "domU\nLinux hvc0\n(drivers/tty/hvc/hvc_xen.c)" as domu
@@ -51,14 +53,39 @@ end note
 
 == Console Input (user types a character) ==
 
-user -> xcd : keystroke on pty master
-
-note over xcd
-  handle_tty_write()
-  tools/console/daemon/io.c
+note over user, xen
+  INPUT path uses handle_tty_read(), NOT handle_tty_write().
+  (handle_tty_write is the reverse: guest output → pty master.)
 end note
 
-xcd -> xcd  : write char to in[] ring\nintf->in[in_prod++ & mask] = char\nxen_mb()
+user -> xen  : keystroke in QEMU serial\n(Xen owns the physical UART)
+xen -> xen   : serial_rx() → __serial_rx()\nserial_rx_ring[prod++] = c\nsend_global_virq(VIRQ_CONSOLE)\n(xen/drivers/char/console.c)
+xen -> hvc0  : VIRQ_CONSOLE event channel\n(notify hardware domain)
+hvc0 -> xen  : HYPERVISOR_console_io(CONSOLEIO_read)
+xen --> hvc0 : drain serial_rx_ring → char\n(do_console_io, console.c)
+
+note over hvc0
+  char surfaces on dom0 hvc0 tty (/dev/hvc0)
+end note
+
+hvc0 -> xlc  : char readable on /dev/hvc0\n(xl console's stdin)
+
+note over xlc
+  operator runs `xl console <domU>`; it reads the
+  char from stdin (hvc0) and writes it to the
+  pty SLAVE (/dev/pts/N, path from xenstore
+  /local/domain/<domid>/console/tty).
+end note
+
+xlc -> xcd   : write char to pty slave (/dev/pts/N)\n→ becomes readable on master_fd
+
+note over xcd
+  poll() returns POLLIN on master_fd
+  → handle_tty_read()
+  tools/console/daemon/io.c:1019
+end note
+
+xcd -> xcd  : read(master_fd, msg)\nwrite char to in[] ring\nintf->in[in_prod++ & mask] = char\nxen_wmb()\nintf->in_prod = prod
 xcd -> xen  : xenevtchn_notify(local_port)\n[SBI ecall → evtchn_send()]
 
 note over xen
