@@ -154,7 +154,7 @@ dev = [
 requires-dist = [
     { name = "pygments", specifier = ">=2.19.2" },
     { name = "rich", specifier = ">=14.3.2" },
-    { name = "textual", specifier = ">=7.5.0" },
+    { name = "textual", specifier = ">=8.2.7" },
 ]
 
 [package.metadata.requires-dev]
@@ -551,7 +551,7 @@ wheels = [
 
 [[package]]
 name = "textual"
-version = "8.0.1"
+version = "8.2.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py", extra = ["linkify"] },
@@ -561,9 +561,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fb/e4/0f6b6c22a30d2dc2850b4d09c8684742cc4ab79501d4588ea05269c1de3f/textual-8.0.1.tar.gz", hash = "sha256:fe6544e57651a7c2a8249b90ec542b45fa945ce4560e69b0d563fb440e7c4db3", size = 6099133, upload-time = "2026-03-01T19:15:41.537Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/7a/c519db0aba5024f86e71e9631810bfdd6866ed2c8695bd7fa34b90e7ef59/textual-8.2.7.tar.gz", hash = "sha256:658f568ff81e30ed43890c3e07520390e5cf1b4763822006e060656b0a88f105", size = 1859249, upload-time = "2026-05-19T10:52:49.531Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a2/23/40e0019fa60d1e83123b72e3201879b32d68a0d6358b3588d23705107921/textual-8.0.1-py3-none-any.whl", hash = "sha256:6b7522c2bc1a3ab90f534144b7e0ca6e25d35c80942ef92ccfb42a54e945d581", size = 719152, upload-time = "2026-03-01T19:15:43.7Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/f5/c1e18bc0707300a0e90204343abbf7d7acd6fb7ebe03a6d4893b99a234b8/textual-8.2.7-py3-none-any.whl", hash = "sha256:4caaa13a90bc4cf9c6c862c067ccd34fe84e9c161710a2a907a8026313b6bd73", size = 731129, upload-time = "2026-05-19T10:52:51.773Z" },
 ]
 
 [[package]]
