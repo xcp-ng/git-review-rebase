@@ -1,4 +1,4 @@
 # generated with update_requirements.py, do not edit manually
-textual>=8.2.7
+textual>=8.2.8
 rich>=15.0.0
 pygments>=2.20.0
