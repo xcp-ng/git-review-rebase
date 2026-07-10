@@ -34,7 +34,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pyright>=1.1.411",
-    "pytest>=9.0.2",
+    "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "black>=24.10.0",
     "ruff>=0.1.0",
