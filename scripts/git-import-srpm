@@ -42,10 +42,11 @@ function usage() {
 while getopts ":c:s:fh" opt; do
     case "${opt}" in
     c)
-        CODE_REPO_PATH="${OPTARG}"
+        CODE_REPO_PATH="$(realpath "${OPTARG}")"
         ;;
     s)
-        SRPM_REPO_PATH="${OPTARG}"
+        SRPM_REPO_PATH="$(realpath "${OPTARG}")"
+        ;;
     f)
         FORCE_IMPORT=1
         ;;
