@@ -40,8 +40,8 @@ function usage() {
 }
 
 while getopts ":c:s:h" opt; do
-	case "${opt}" in
-	c)
+    case "${opt}" in
+    c)
         CODE_REPO_PATH="${OPTARG}"
         ;;
     s)
@@ -79,8 +79,8 @@ elif [[ ${PRODUCT} = "rpm" ]]; then
     RELEASE_SUFFIX="-release"
 else
     if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
-	echo "Unknown package: '${PRODUCT}'"
-	exit 1
+        echo "Unknown package: '${PRODUCT}'"
+        exit 1
     fi
     RELEASE_PREFIX=""
     RELEASE_SUFFIX=""
@@ -114,25 +114,25 @@ function get_build_dir() {
     local build_dirname_query_filter
     build_dirname_query_filter='%{name}-%{version}\n'
     if [[ $(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | grep '^%autosetup' ) =~ [[:space:]]-n[[:space:]]+([^[:space:]]+) ]]; then
-	build_dirname_query_filter="${BASH_REMATCH[1]}\n"
+        build_dirname_query_filter="${BASH_REMATCH[1]}\n"
     fi
 
     local build_dirname
     build_dirname=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
-			rpmspec --query --define "_topdir ${worktree}" "${RPM_OPTS[@]}" --qf "${build_dirname_query_filter}" /dev/stdin | \
-			awk 'NR == 1'
-		 )
+            rpmspec --query --define "_topdir ${worktree}" "${RPM_OPTS[@]}" --qf "${build_dirname_query_filter}" /dev/stdin | \
+            awk 'NR == 1'
+         )
 
     local build_dir
     build_dir="${worktree}/BUILD/${build_dirname}"
     if [[ ! -d "${build_dir}" ]] ; then
-	# rpmbuild version 6.x are building in a sub-directory
+        # rpmbuild version 6.x are building in a sub-directory
         build_dir="${worktree}/BUILD/${build_dirname}-build/${build_dirname}"
     fi
 
     if [[ ! -d "${build_dir}" ]]; then
-	echo "Could not infer an existing build directory from ${build_dirname}" 1>&2
-	exit 1
+        echo "Could not infer an existing build directory from ${build_dirname}" 1>&2
+        exit 1
     fi
     echo "${build_dir}"
 }
@@ -196,7 +196,6 @@ function get_branch_name() {
     else
         echo "${PRODUCT}/${vendor}-${full_version}/patched"
     fi
-
 }
 
 function init_worktrees() {
@@ -209,14 +208,14 @@ function init_worktrees() {
     # Upstream stable base
     local base_version
     if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
-	base_version=$(get_base_version "${srpm_repo_worktree}" HEAD)
-	if [[ ${PRODUCT} = "xen" ]]; then
+        base_version=$(get_base_version "${srpm_repo_worktree}" HEAD)
+        if [[ ${PRODUCT} = "xen" ]]; then
             if [[ ${base_version} = "RELEASE-4.13.0" ]]; then
-		base_version=85e1424de2dda
+                base_version=85e1424de2dda
             fi
-	fi
+        fi
     else
-	base_version=$(git -C "${CODE_REPO_PATH}" rev-parse "origin/source/8.3^{/Initial commit.}")
+        base_version=$(git -C "${CODE_REPO_PATH}" rev-parse "origin/source/8.3^{/Initial commit.}")
     fi
 
     BRANCH_NAME="$(get_branch_name "${srpm_repo_worktree}" HEAD)"
@@ -225,13 +224,12 @@ function init_worktrees() {
 
     if git -C "${CODE_REPO_PATH}" show-ref --verify --quiet "refs/heads/${BRANCH_NAME}"; then
         echo "[-] branch ${BRANCH_NAME} already exists"
-	if [[ "${FORCE_IMPORT:-}" ]]; then
-	    git branch -D "${BRANCH_NAME}"
-	else
+        if [[ "${FORCE_IMPORT:-}" ]]; then
+            git branch -D "${BRANCH_NAME}"
+        else
             exit 1
-	fi
+        fi
     fi
-
 
     git -C "${CODE_REPO_PATH}" rev-parse "${base_version}" 2> /dev/null > /dev/null || {
         echo "- ${BRANCH_NAME}: ${base_version} cannot be found, have you fetched"
@@ -267,7 +265,6 @@ END {
 }
 ' "${p}" > "${p}.fixed"
     mv "${p}.fixed" "${p}"
-
 }
 
 function load_author_and_title() {
@@ -405,12 +402,12 @@ function import_all_branches() {
     for b in "${!revs_for_version[@]}"; do
         local revision="${revs_for_version[${b}]}"
         case ${b} in
-            unknown_branch_name*)
-                echo "Could not infer a branch name for revision: ${revision}" 1>&2
-                ;;
-            *)
-                echo "${revs_for_version[${b}]}"
-                ;;
+        unknown_branch_name*)
+            echo "Could not infer a branch name for revision: ${revision}" 1>&2
+            ;;
+        *)
+            echo "${revs_for_version[${b}]}"
+            ;;
         esac
     done | (SRPM_REPO_PATH="${SRPM_REPO_PATH}" CODE_REPO_PATH="${CODE_REPO_PATH}" xargs -n 1 -P "${nproc}" "${THIS_SCRIPT}")
 }
@@ -473,22 +470,22 @@ if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
     cd "${SRPM_REPO_WORKTREE}"
 
     git show "HEAD:${SPEC_FILE}" | while IFS= read -r l; do
-	case "${l}" in
-            Patch*)
-		p="${l#* }"
-		apply_patch "${CODE_REPO_WORKTREE}" "${SRPM_REPO_WORKTREE}/SOURCES/${p}" >> "${COMMAND_LOGS}" 2>> "${COMMAND_LOGS}" || {
-                    echo "[-] [apply_patch] Failed reconstructing ${BRANCH_NAME} for ${SRPM_REPO_REVISION}, check ${COMMAND_LOGS}"
-                    if [[ -z "${CARRY_ON:-}" ]]; then
-			exit 1
-                    else
-			git am --abort || :
-			git reset --hard || :
-                    fi
-		}
-		;;
-            *)
-		;;
-	esac
+        case "${l}" in
+        Patch*)
+            p="${l#* }"
+            apply_patch "${CODE_REPO_WORKTREE}" "${SRPM_REPO_WORKTREE}/SOURCES/${p}" >> "${COMMAND_LOGS}" 2>> "${COMMAND_LOGS}" || {
+                echo "[-] [apply_patch] Failed reconstructing ${BRANCH_NAME} for ${SRPM_REPO_REVISION}, check ${COMMAND_LOGS}"
+                if [[ -z "${CARRY_ON:-}" ]]; then
+                    exit 1
+                else
+                    git am --abort || :
+                    git reset --hard || :
+                fi
+            }
+            ;;
+        *)
+            ;;
+        esac
     done
 fi
 
@@ -501,9 +498,9 @@ wait "${RPMBUILD_PID}" || {
     export_author
 
     if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
-	commit_msg="rpmbuild: remaining diff."
+        commit_msg="rpmbuild: remaining diff."
     else
-	commit_msg="git-import-srpm: import of $(get_full_version "${SRPM_REPO_WORKTREE}" "${SRPM_REPO_REVISION}")"
+        commit_msg="git-import-srpm: import of $(get_full_version "${SRPM_REPO_WORKTREE}" "${SRPM_REPO_REVISION}")"
     fi
     git -C "${CODE_REPO_WORKTREE}" commit ${GIT_COMMIT_OPTIONS} -s --date="${GIT_COMMITTER_DATE}" -m "${commit_msg}" 2>> "${COMMAND_LOGS}" >> "${COMMAND_LOGS}" || :
 }
