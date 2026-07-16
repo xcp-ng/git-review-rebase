@@ -182,7 +182,9 @@ function get_release() {
 
     check_spec_file "${worktree}" "${revision}"
 
-    git -C "${worktree}" show "${revision}:${SPEC_FILE}" | rpmspec -P "${RPM_OPTS[@]}" /dev/stdin | awk '/^Release:/{print $NF}'
+    git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
+        rpmspec -P "${RPM_OPTS[@]}" --define 'dist %{nil}' /dev/stdin | \
+        awk '/^Release:/{print $NF}'
 }
 
 function get_full_version() {
