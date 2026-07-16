@@ -80,6 +80,12 @@ elif [[ ${PRODUCT} = "xen" ]]; then
 elif [[ ${PRODUCT} = "rpm" ]]; then
     RELEASE_PREFIX="rpm-"
     RELEASE_SUFFIX="-release"
+elif [[ ${PRODUCT} = "edk2" ]]; then
+    # edk2's source version (e.g. 20220801) does not match its git stable
+    # tag (e.g. edk2-stable202208).  The spec carries the exact source ref
+    # in package_srccommit, so use that when creating the source worktree.
+    RELEASE_PREFIX=""
+    RELEASE_SUFFIX=""
 else
     if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
         echo "Unknown package: '${PRODUCT}'"
@@ -149,6 +155,27 @@ function get_base_version() {
     git -C "${worktree}" show "${revision}:${SPEC_FILE}" | rpmspec -P "${RPM_OPTS[@]}" /dev/stdin | awk "/^Version:/{print \"${RELEASE_PREFIX}\" \$NF \"${RELEASE_SUFFIX:-}\"}"
 }
 
+function get_source_commit() {
+    local worktree="$1"
+    local revision="$2"
+
+    check_spec_file "${worktree}" "${revision}"
+
+    if [[ ${PRODUCT} = "edk2" ]]; then
+        local source_commit
+        source_commit=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
+            awk '$1 == "%global" && $2 == "package_srccommit" { print $3; exit }'
+        )
+        if [[ -z ${source_commit} ]]; then
+            echo "${SPEC_FILE} does not define package_srccommit" 1>&2
+            exit 1
+        fi
+        echo "${source_commit}"
+    else
+        get_base_version "${worktree}" "${revision}"
+    fi
+}
+
 function get_release() {
     local worktree="$1"
     local revision="$2"
@@ -211,7 +238,7 @@ function init_worktrees() {
     # Upstream stable base
     local base_version
     if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
-        base_version=$(get_base_version "${srpm_repo_worktree}" HEAD)
+        base_version=$(get_source_commit "${srpm_repo_worktree}" HEAD)
         if [[ ${PRODUCT} = "xen" ]]; then
             if [[ ${base_version} = "RELEASE-4.13.0" ]]; then
                 base_version=85e1424de2dda
@@ -295,6 +322,67 @@ function export_author() {
     export GIT_AUTHOR_EMAIL="${GIT_COMMITTER_EMAIL}"
 }
 
+# RPM patches for edk2 can contain changes to a submodule.  Such changes
+# cannot be applied with git-am in the parent repository because it stores
+# the submodule as a gitlink rather than as ordinary files.  Reconstruct the
+# parent commit by updating that gitlink to the commit named by the patch.
+function apply_edk2_submodule_patch() {
+    local worktree="$1"
+    local patch="$2"
+    local submodule_path
+    local patch_path
+    local target_commit
+    local mailinfo
+    local subject
+
+    # Find the gitlink containing the first path in the patch by walking up
+    # its path components.
+    patch_path=$(sed -n 's@^diff --git a/\([^ ]*\) b/.*@\1@p' "${patch}" | awk 'NR == 1')
+    submodule_path="${patch_path}"
+    while [[ -n ${submodule_path} ]]; do
+        if git -C "${worktree}" ls-tree HEAD "${submodule_path}" | grep -q '^160000 '; then
+            break
+        fi
+        [[ ${submodule_path} = */* ]] || submodule_path=""
+        submodule_path="${submodule_path%/*}"
+    done
+
+    if [[ -z ${submodule_path} ]]; then
+        return 1
+    fi
+
+    # Only handle patches wholly contained in one submodule.  Mixed patches
+    # must continue through the normal parent-repository patch logic.
+    while IFS= read -r patch_path; do
+        if [[ ${patch_path} != "${submodule_path}"/* ]]; then
+            return 1
+        fi
+    done < <(sed -n 's@^diff --git a/\([^ ]*\) b/.*@\1@p' "${patch}")
+
+    # The final cherry-picked commit is the submodule commit represented by
+    # the patch's file changes.
+    target_commit=$(sed -n 's/^(cherry picked from commit \([0-9a-f]*\)).*/\1/p' "${patch}" | awk 'END {print}')
+    if [[ -z ${target_commit} ]]; then
+        return 1
+    fi
+
+    export_author
+
+    # Preserve the patch author, date, and subject for the parent commit.
+    mailinfo=$(git mailinfo /dev/null /dev/null < "${patch}" | \
+        sed -n -e 's/^Author: \(.*\)$/export GIT_AUTHOR_NAME="\1"/p' \
+               -e 's/^Email: \(.*\)$/export GIT_AUTHOR_EMAIL="\1"/p' \
+               -e 's/^Date: \(.*\)$/export GIT_AUTHOR_DATE="\1"/p' \
+               -e 's/^Subject: \(.*\)$/subject="\1"/p')
+    eval "${mailinfo}"
+    subject=${subject:-$(basename "${patch}")}
+
+    # Record a submodule update as a gitlink change in the parent repository.
+    git -C "${worktree}" update-index --add \
+        --cacheinfo "160000,${target_commit},${submodule_path}"
+    git -C "${worktree}" commit ${GIT_COMMIT_OPTIONS} -m "${subject}"
+}
+
 function apply_patch() (
     local worktree="$1"
     local patch="$2"
@@ -311,6 +399,11 @@ function apply_patch() (
     fi
 
     export_author
+
+    # git-am cannot apply a file patch to an edk2 submodule gitlink.
+    if [[ ${PRODUCT} = "edk2" ]] && apply_edk2_submodule_patch "${worktree}" "${patch}"; then
+        return 0
+    fi
 
     fixup_date "${patch}"
 
