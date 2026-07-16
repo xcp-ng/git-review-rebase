@@ -295,7 +295,7 @@ function export_author() {
     export GIT_AUTHOR_EMAIL="${GIT_COMMITTER_EMAIL}"
 }
 
-function apply_patch() {
+function apply_patch() (
     local worktree="$1"
     local patch="$2"
 
@@ -361,7 +361,7 @@ function apply_patch() {
         return $?
     fi
     return 0
-}
+)
 
 function apply_spec_quirks() {
     # This one is no-where to be found, and it doesn't really change any
@@ -472,7 +472,7 @@ RPMBUILD_PID=$!
 if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
     cd "${SRPM_REPO_WORKTREE}"
 
-    git show "HEAD:${SPEC_FILE}" | while IFS= read -r l; do
+    while IFS= read -r l; do
         case "${l}" in
         Patch*)
             p="${l#* }"
@@ -481,15 +481,15 @@ if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
                 if [[ -z "${CARRY_ON:-}" ]]; then
                     exit 1
                 else
-                    git am --abort || :
-                    git reset --hard || :
+                    git -C "${CODE_REPO_WORKTREE}" am --abort || :
+                    git -C "${CODE_REPO_WORKTREE}" reset --hard || :
                 fi
             }
             ;;
         *)
             ;;
         esac
-    done
+    done < <(git -C "${SRPM_REPO_WORKTREE}" show "HEAD:${SPEC_FILE}")
 fi
 
 wait "${RPMBUILD_PID}" || {
