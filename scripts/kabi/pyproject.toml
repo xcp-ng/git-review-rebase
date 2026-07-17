@@ -39,7 +39,7 @@ dev = [
     "black>=26.5.1",
     "ruff>=0.15.20",
     "flake8>=7.3.0",
-    "mypy>=2.1.0",
+    "mypy>=2.2.0",
     "types-Pygments>=2.19.0",
 ]
 
