@@ -230,21 +230,53 @@ function get_branch_name() {
     fi
 }
 
-function edk2_fixup_submodules() {
+function del_submodule() {
+    local submodule="$1"
+
+    # remove submodule from the index but leave its files in the tree
+    git rm --cached "$submodule"
+    git commit -s --date="${GIT_COMMITTER_DATE}" -m "$submodule: removed."
+
+    rm "$submodule"/.git
+ }
+
+function flatten_submodule() {
+    local submodule="$1"
+    local ref="$2"
+
+    # Checkout right rev and commit
+    (
+        cd "$submodule"
+        git checkout "$2"
+    )
+    git commit -a -s --date="${GIT_COMMITTER_DATE}" -m "$submodule: update to matching package version." || :
+
+    # Remove sub-module from git's knowledge
+    del_submodule "$submodule"
+
+    # Commit all files within as regular files
+    git add "$submodule"
+    git commit -s --date="${GIT_COMMITTER_DATE}" -m "$submodule: flatten into parent repo."
+}
+
+function edk2_fixup_submodules() (
     # The actual state of the sub-modules might differ from the
     # tarballs released with the tarballs when compared with the
     # upstream version of the package, so make sure to fix this up
-    openssl_version=$(sed -n 's/Source[0-9]\+: openssl-\([0-9.]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
-    git -C "${code_repo_worktree}"/CryptoPkg/Library/OpensslLib/openssl checkout openssl-"${openssl_version}"
-    brotli_basetools_sha1=$(sed -n 's/Source[0-9]\+: brotli-basetools-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
-    git -C "${code_repo_worktree}"/BaseTools/Source/C/BrotliCompress/brotli checkout "${brotli_basetools_sha1}"
-    brotli_lib_sha1=$(sed -n 's/Source[0-9]\+: brotli-lib-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
-    git -C "${code_repo_worktree}"/MdeModulePkg/Library/BrotliCustomDecompressLib/brotli checkout "${brotli_lib_sha1}"
+
+    cd "${code_repo_worktree}"
 
     export_author
 
-    git -C "${code_repo_worktree}" commit --all ${GIT_COMMIT_OPTIONS} -s --date="${GIT_COMMITTER_DATE}" -m "Update sub-modules to matching package version."
-}
+    openssl_version=$(sed -n 's/Source[0-9]\+: openssl-\([0-9.]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+    flatten_submodule CryptoPkg/Library/OpensslLib/openssl openssl-"${openssl_version}"
+
+    brotli_basetools_sha1=$(sed -n 's/Source[0-9]\+: brotli-basetools-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+    flatten_submodule BaseTools/Source/C/BrotliCompress/brotli "${brotli_basetools_sha1}"
+
+    brotli_lib_sha1=$(sed -n 's/Source[0-9]\+: brotli-lib-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+    flatten_submodule MdeModulePkg/Library/BrotliCustomDecompressLib/brotli  "${brotli_lib_sha1}"
+)
 
 function init_worktrees() {
     local srpm_repo_worktree="$1"
@@ -285,8 +317,8 @@ function init_worktrees() {
     }
 
     git -C "${CODE_REPO_PATH}" worktree add -B "${BRANCH_NAME}-partial" "${code_repo_worktree}" "${base_version}" >> "${COMMAND_LOGS}"
-    git -C ${code_repo_worktree} submodule update --init
     if [[ ${PRODUCT} == "edk2" ]]; then
+	git -C ${code_repo_worktree} submodule update --init
         edk2_fixup_submodules
     fi
     git -C "${CODE_REPO_PATH}" branch -f "${BRANCH_NAME%patched}source" "${base_version}"
@@ -401,12 +433,8 @@ function apply_patch() (
                 export GIT_AUTHOR_EMAIL="<berrange@redhat.com>"
             fi
 
-            # There was a commit description, so try and use it
-            git submodule foreach "git commit -a ${GIT_COMMIT_OPTIONS} -F ${git_dir}/rebase-apply/msg || :" || :
             git commit -a ${GIT_COMMIT_OPTIONS} -F "${git_dir}"/rebase-apply/msg && git am --skip
         else
-            # No commit description, use the patch path
-            git submodule foreach "git commit -a ${GIT_COMMIT_OPTIONS} -m \"$(basename "${p}")\" || :" || :
             git commit -a ${GIT_COMMIT_OPTIONS} -m "$(basename "${p}")" && git am --skip
         fi
         return $?
@@ -555,11 +583,8 @@ wait "${RPMBUILD_PID}" || {
         commit_msg="git-import-srpm: import of $(get_full_version "${SRPM_REPO_WORKTREE}" "${SRPM_REPO_REVISION}")"
     fi
 
-    git -C "${CODE_REPO_WORKTREE}" submodule foreach "git --work-tree ${build_dir}/\${sm_path} add -A"
     git -C "${CODE_REPO_WORKTREE}" --work-tree "${build_dir}" add -A
     export_author
-
-    git -C "${CODE_REPO_WORKTREE}" submodule foreach "git commit ${GIT_COMMIT_OPTIONS} -s --date=\"${GIT_COMMITTER_DATE}\" -m \"${commit_msg}\" || :" 2>> "${COMMAND_LOGS}" >> "${COMMAND_LOGS}"
     git -C "${CODE_REPO_WORKTREE}" commit ${GIT_COMMIT_OPTIONS} -s --date="${GIT_COMMITTER_DATE}" -m "${commit_msg}" 2>> "${COMMAND_LOGS}" >> "${COMMAND_LOGS}" || :
 }
 
