@@ -230,6 +230,22 @@ function get_branch_name() {
     fi
 }
 
+function edk2_fixup_submodules() {
+    # The actual state of the sub-modules might differ from the
+    # tarballs released with the tarballs when compared with the
+    # upstream version of the package, so make sure to fix this up
+    openssl_version=$(sed -n 's/Source[0-9]\+: openssl-\([0-9.]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+    git -C "${code_repo_worktree}"/CryptoPkg/Library/OpensslLib/openssl checkout openssl-"${openssl_version}"
+    brotli_basetools_sha1=$(sed -n 's/Source[0-9]\+: brotli-basetools-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+    git -C "${code_repo_worktree}"/BaseTools/Source/C/BrotliCompress/brotli checkout "${brotli_basetools_sha1}"
+    brotli_lib_sha1=$(sed -n 's/Source[0-9]\+: brotli-lib-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+    git -C "${code_repo_worktree}"/MdeModulePkg/Library/BrotliCustomDecompressLib/brotli checkout "${brotli_lib_sha1}"
+
+    export_author
+
+    git -C "${code_repo_worktree}" commit --all ${GIT_COMMIT_OPTIONS} -s --date="${GIT_COMMITTER_DATE}" -m "Update sub-modules to matching package version."
+}
+
 function init_worktrees() {
     local srpm_repo_worktree="$1"
     local code_repo_worktree="$2"
@@ -269,6 +285,10 @@ function init_worktrees() {
     }
 
     git -C "${CODE_REPO_PATH}" worktree add -B "${BRANCH_NAME}-partial" "${code_repo_worktree}" "${base_version}" >> "${COMMAND_LOGS}"
+    git -C ${code_repo_worktree} submodule update --init
+    if [[ ${PRODUCT} == "edk2" ]]; then
+        edk2_fixup_submodules
+    fi
     git -C "${CODE_REPO_PATH}" branch -f "${BRANCH_NAME%patched}source" "${base_version}"
 }
 
@@ -324,67 +344,6 @@ function export_author() {
     export GIT_AUTHOR_EMAIL="${GIT_COMMITTER_EMAIL}"
 }
 
-# RPM patches for edk2 can contain changes to a submodule.  Such changes
-# cannot be applied with git-am in the parent repository because it stores
-# the submodule as a gitlink rather than as ordinary files.  Reconstruct the
-# parent commit by updating that gitlink to the commit named by the patch.
-function apply_edk2_submodule_patch() {
-    local worktree="$1"
-    local patch="$2"
-    local submodule_path
-    local patch_path
-    local target_commit
-    local mailinfo
-    local subject
-
-    # Find the gitlink containing the first path in the patch by walking up
-    # its path components.
-    patch_path=$(sed -n 's@^diff --git a/\([^ ]*\) b/.*@\1@p' "${patch}" | awk 'NR == 1')
-    submodule_path="${patch_path}"
-    while [[ -n ${submodule_path} ]]; do
-        if git -C "${worktree}" ls-tree HEAD "${submodule_path}" | grep -q '^160000 '; then
-            break
-        fi
-        [[ ${submodule_path} = */* ]] || submodule_path=""
-        submodule_path="${submodule_path%/*}"
-    done
-
-    if [[ -z ${submodule_path} ]]; then
-        return 1
-    fi
-
-    # Only handle patches wholly contained in one submodule.  Mixed patches
-    # must continue through the normal parent-repository patch logic.
-    while IFS= read -r patch_path; do
-        if [[ ${patch_path} != "${submodule_path}"/* ]]; then
-            return 1
-        fi
-    done < <(sed -n 's@^diff --git a/\([^ ]*\) b/.*@\1@p' "${patch}")
-
-    # The final cherry-picked commit is the submodule commit represented by
-    # the patch's file changes.
-    target_commit=$(sed -n 's/^(cherry picked from commit \([0-9a-f]*\)).*/\1/p' "${patch}" | awk 'END {print}')
-    if [[ -z ${target_commit} ]]; then
-        return 1
-    fi
-
-    export_author
-
-    # Preserve the patch author, date, and subject for the parent commit.
-    mailinfo=$(git mailinfo /dev/null /dev/null < "${patch}" | \
-        sed -n -e 's/^Author: \(.*\)$/export GIT_AUTHOR_NAME="\1"/p' \
-               -e 's/^Email: \(.*\)$/export GIT_AUTHOR_EMAIL="\1"/p' \
-               -e 's/^Date: \(.*\)$/export GIT_AUTHOR_DATE="\1"/p' \
-               -e 's/^Subject: \(.*\)$/subject="\1"/p')
-    eval "${mailinfo}"
-    subject=${subject:-$(basename "${patch}")}
-
-    # Record a submodule update as a gitlink change in the parent repository.
-    git -C "${worktree}" update-index --add \
-        --cacheinfo "160000,${target_commit},${submodule_path}"
-    git -C "${worktree}" commit ${GIT_COMMIT_OPTIONS} -m "${subject}"
-}
-
 function apply_patch() (
     local worktree="$1"
     local patch="$2"
@@ -401,11 +360,6 @@ function apply_patch() (
     fi
 
     export_author
-
-    # git-am cannot apply a file patch to an edk2 submodule gitlink.
-    if [[ ${PRODUCT} = "edk2" ]] && apply_edk2_submodule_patch "${worktree}" "${patch}"; then
-        return 0
-    fi
 
     fixup_date "${patch}"
 
@@ -448,10 +402,12 @@ function apply_patch() (
             fi
 
             # There was a commit description, so try and use it
-            git commit ${GIT_COMMIT_OPTIONS} -F "${git_dir}"/rebase-apply/msg && git am --skip
+            git submodule foreach "git commit -a ${GIT_COMMIT_OPTIONS} -F ${git_dir}/rebase-apply/msg || :" || :
+            git commit -a ${GIT_COMMIT_OPTIONS} -F "${git_dir}"/rebase-apply/msg && git am --skip
         else
             # No commit description, use the patch path
-            git commit ${GIT_COMMIT_OPTIONS} -m "$(basename "${p}")" && git am --skip
+            git submodule foreach "git commit -a ${GIT_COMMIT_OPTIONS} -m \"$(basename "${p}")\" || :" || :
+            git commit -a ${GIT_COMMIT_OPTIONS} -m "$(basename "${p}")" && git am --skip
         fi
         return $?
     fi
@@ -592,14 +548,18 @@ wait "${RPMBUILD_PID}" || {
     exit 1
 } && {
     build_dir="$(get_build_dir "${SRPM_REPO_WORKTREE}" "${SRPM_REPO_REVISION}")"
-    git -C "${CODE_REPO_WORKTREE}" --work-tree "${build_dir}" add -A
-    export_author
 
     if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
         commit_msg="rpmbuild: remaining diff."
     else
         commit_msg="git-import-srpm: import of $(get_full_version "${SRPM_REPO_WORKTREE}" "${SRPM_REPO_REVISION}")"
     fi
+
+    git -C "${CODE_REPO_WORKTREE}" submodule foreach "git --work-tree ${build_dir}/\${sm_path} add -A"
+    git -C "${CODE_REPO_WORKTREE}" --work-tree "${build_dir}" add -A
+    export_author
+
+    git -C "${CODE_REPO_WORKTREE}" submodule foreach "git commit ${GIT_COMMIT_OPTIONS} -s --date=\"${GIT_COMMITTER_DATE}\" -m \"${commit_msg}\" || :" 2>> "${COMMAND_LOGS}" >> "${COMMAND_LOGS}"
     git -C "${CODE_REPO_WORKTREE}" commit ${GIT_COMMIT_OPTIONS} -s --date="${GIT_COMMITTER_DATE}" -m "${commit_msg}" 2>> "${COMMAND_LOGS}" >> "${COMMAND_LOGS}" || :
 }
 
