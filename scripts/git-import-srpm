@@ -242,7 +242,6 @@ function del_submodule() {
 
 function flatten_submodule() {
     local submodule="$1"
-    local ref="$2"
 
     # Checkout right rev and commit
     (
@@ -318,7 +317,7 @@ function init_worktrees() {
 
     git -C "${CODE_REPO_PATH}" worktree add -B "${BRANCH_NAME}-partial" "${code_repo_worktree}" "${base_version}" >> "${COMMAND_LOGS}"
     if [[ ${PRODUCT} == "edk2" ]]; then
-	git -C ${code_repo_worktree} submodule update --init
+	git -C "${code_repo_worktree}" submodule update --init
         edk2_fixup_submodules
     fi
     git -C "${CODE_REPO_PATH}" branch -f "${BRANCH_NAME%patched}source" "${base_version}"
