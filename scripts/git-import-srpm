@@ -55,7 +55,7 @@ while getopts ":c:s:fh" opt; do
         ;;
     esac
 done
-
+set -x
 shift "$((OPTIND - 1))"
 
 # Fail if no revision given
@@ -517,7 +517,7 @@ rpmbuild --nodeps \
          --define "_default_patch_fuzz 2" \
          "${RPM_OPTS[@]}" \
          --eval "%{_default_patch_fuzz}" \
-         -bp "${SRPM_REPO_WORKTREE}/${SPEC_FILE}" 2>> "${COMMAND_LOGS}" >> "${COMMAND_LOGS}" &
+         -bp "${SRPM_REPO_WORKTREE}/${SPEC_FILE}" |& sed 's/^/(rpmbuild)/' >> "${COMMAND_LOGS}"  &
 RPMBUILD_PID=$!
 
 if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
