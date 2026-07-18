@@ -434,7 +434,7 @@ function apply_patch() (
 
             git commit -a ${GIT_COMMIT_OPTIONS} -F "${git_dir}"/rebase-apply/msg && git am --skip
         else
-            git commit -a ${GIT_COMMIT_OPTIONS} -m "$(basename "${p}")" && git am --skip
+            git commit -a ${GIT_COMMIT_OPTIONS} -m "$(basename "${p}" .patch)" && git am --skip
         fi
         return $?
     fi
