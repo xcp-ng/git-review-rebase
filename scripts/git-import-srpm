@@ -306,7 +306,7 @@ function init_worktrees() {
         if [[ "${FORCE_IMPORT:-}" ]]; then
             git -C "${CODE_REPO_PATH}" branch -D "${BRANCH_NAME}"
         else
-            exit 1
+            exit 0
         fi
     fi
 
