@@ -170,6 +170,11 @@ function get_source_commit() {
             awk '$1 == "%global" && $2 == "package_srccommit" { print $3; exit }'
         )
         if [[ -z ${source_commit} ]]; then
+            source_commit=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
+                awk '$1 == "%global" && $2 == "edk2_githash" { print $3; exit }'
+            )
+        fi
+        if [[ -z ${source_commit} ]]; then
             echo "${SPEC_FILE} does not define package_srccommit" 1>&2
             exit 1
         fi
@@ -270,14 +275,33 @@ function edk2_fixup_submodules() (
 
     export_author
 
-    openssl_version=$(sed -n 's/Source[0-9]\+: openssl-\([0-9.]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
-    flatten_submodule CryptoPkg/Library/OpensslLib/openssl openssl-"${openssl_version}"
+    if grep --quiet 'Source[0-9]\+: openssl-.*.tar.gz' "${srpm_repo_worktree}/${SPEC_FILE}"; then
+        openssl_version=openssl-$(sed -n 's/Source[0-9]\+: openssl-\([0-9.]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+        if [ "${openssl_version}" = "openssl-" ]; then
+            openssl_version=$(sed -n 's/Source[0-9]\+: openssl-\([0-9a-f]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+        fi
+    else
+        openssl_version=HEAD
+    fi
+    flatten_submodule CryptoPkg/Library/OpensslLib/openssl "${openssl_version}"
 
-    brotli_basetools_sha1=$(sed -n 's/Source[0-9]\+: brotli-basetools-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
-    flatten_submodule BaseTools/Source/C/BrotliCompress/brotli "${brotli_basetools_sha1}"
+    if [ -d BaseTools/Source/C/BrotliCompress/brotli ]; then
+        if grep --quiet 'Source[0-9]\+: brotli-basetools-.*.tar.gz'  "${srpm_repo_worktree}/${SPEC_FILE}"; then
+            brotli_basetools_sha1=$(sed -n 's/Source[0-9]\+: brotli-basetools-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+        else
+            brotli_basetools_sha1=HEAD
+        fi
+        flatten_submodule BaseTools/Source/C/BrotliCompress/brotli "${brotli_basetools_sha1}"
+    fi
 
-    brotli_lib_sha1=$(sed -n 's/Source[0-9]\+: brotli-lib-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
-    flatten_submodule MdeModulePkg/Library/BrotliCustomDecompressLib/brotli  "${brotli_lib_sha1}"
+    if [ -d MdeModulePkg/Library/BrotliCustomDecompressLib/brotli ]; then
+        if grep --quiet 'Source[0-9]\+: brotli-lib-.*.tar.gz' "${srpm_repo_worktree}/${SPEC_FILE}"; then
+            brotli_lib_sha1=$(sed -n 's/Source[0-9]\+: brotli-lib-\([0-9a-z]\+\)\.tar.gz/\1/p' "${srpm_repo_worktree}/${SPEC_FILE}")
+        else
+            brotli_lib_sha1=HEAD
+        fi
+        flatten_submodule MdeModulePkg/Library/BrotliCustomDecompressLib/brotli  "${brotli_lib_sha1}"
+    fi
 )
 
 function init_worktrees() {
