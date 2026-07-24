@@ -5,7 +5,7 @@
 #     git-import-srpm HEAD
 #
 # - To import all revisions (the script will dedupe the branches):
-#     git-import-srpm --all
+#     git-import-srpm -a
 #
 # This is a poor man's script importing a SRPM into a git repository.  It
 # has a few limitations in its current quick&dirty implementation:
@@ -39,8 +39,11 @@ function usage() {
     exit "${1}"
 }
 
-while getopts ":c:s:fh" opt; do
+while getopts ":ac:s:fh" opt; do
     case "${opt}" in
+    a)
+        IMPORT_ALL=true
+        ;;
     c)
         CODE_REPO_PATH="$(realpath "${OPTARG}")"
         ;;
@@ -59,9 +62,9 @@ set -x
 shift "$((OPTIND - 1))"
 
 # Fail if no revision given
-[ ${#@} -ne 1 ] && usage 1
+[ -z "${IMPORT_ALL:-}" ] && [ ${#@} -ne 1 ] && usage 1
 
-SRPM_REPO_REVISION=${1}
+SRPM_REPO_REVISION=${1:-}
 SRPM_REPO_PATH=${SRPM_REPO_PATH:-${PWD}}
 PRODUCT="$(basename "${SRPM_REPO_PATH}/SPECS/"*.spec .spec)"
 SPEC_FILE="SPECS/${PRODUCT}.spec"
@@ -317,7 +320,7 @@ function init_worktrees() {
 
     git -C "${CODE_REPO_PATH}" worktree add -B "${BRANCH_NAME}-partial" "${code_repo_worktree}" "${base_version}" >> "${COMMAND_LOGS}"
     if [[ ${PRODUCT} == "edk2" ]]; then
-	git -C "${code_repo_worktree}" submodule update --init
+        git -C "${code_repo_worktree}" submodule update --init
         edk2_fixup_submodules
     fi
     git -C "${CODE_REPO_PATH}" branch -f "${BRANCH_NAME%patched}source" "${base_version}"
@@ -493,13 +496,13 @@ function import_all_branches() {
     done | (SRPM_REPO_PATH="${SRPM_REPO_PATH}" CODE_REPO_PATH="${CODE_REPO_PATH}" xargs -n 1 -P "${nproc}" "${THIS_SCRIPT}")
 }
 
-COMMAND_LOGS=/tmp/git-import-srpm.${PRODUCT}.${1}.debug.log
+COMMAND_LOGS=/tmp/git-import-srpm.${PRODUCT}.${1:-all}.debug.log
 if [[ -f ${COMMAND_LOGS} ]]; then
     rm "${COMMAND_LOGS}"
 fi
 exec 2> "${COMMAND_LOGS}"
 
-if [[ "$1" = "--all" ]]; then
+if [[ "${IMPORT_ALL:-}" ]]; then
     import_all_branches
     exit 0
 fi
