@@ -39,7 +39,7 @@ function usage() {
     exit "${1}"
 }
 
-while getopts ":ac:s:dfh" opt; do
+while getopts ":ac:s:dDfh" opt; do
     case "${opt}" in
     a)
         IMPORT_ALL=true
@@ -52,6 +52,9 @@ while getopts ":ac:s:dfh" opt; do
         ;;
     d)
         OOT_DRIVER_IMPORT=true
+        ;;
+    D)
+        DONT_DELETE_TMP_DIR=true
         ;;
     f)
         FORCE_IMPORT=1
