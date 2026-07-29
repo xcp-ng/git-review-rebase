@@ -130,9 +130,9 @@ function get_build_dir() {
     check_spec_file "${worktree}" "${revision}"
 
     local build_dirname_query_filter
-    build_dirname_query_filter='%{name}-%{version}\n'
+    build_dirname_query_filter='%{name}-%{version}'
     if [[ $(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | grep '^%autosetup' ) =~ [[:space:]]-n[[:space:]]+([^[:space:]]+) ]]; then
-        build_dirname_query_filter="${BASH_REMATCH[1]}\n"
+        build_dirname_query_filter="${BASH_REMATCH[1]}"
     fi
 
     local build_dirname
