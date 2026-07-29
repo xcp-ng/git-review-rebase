@@ -123,6 +123,21 @@ function check_spec_file() {
     fi
 }
 
+function query_format_spec_file() {
+    local worktree="$1"
+    local revision="$2"
+    local format="$3"
+
+    # This function could use 'rpmspec --query --qf ${format}' but --qf only
+    # evaluates standard rpm macros, not the local ones defined in the specfile
+    # as '%define macro value'. 'rpmspec --shell' evaluates all specfile macros
+    # correctly.
+    echo "${format}" |
+        rpmspec --shell --define "_topdir ${worktree}" "${RPM_OPTS[@]}" \
+                <(git -C "${worktree}" show "${revision}:${SPEC_FILE}") 2>/dev/null |
+        grep -v "^>"
+}
+
 function get_build_dir() {
     local worktree="$1"
     local revision="$2"
@@ -136,16 +151,18 @@ function get_build_dir() {
     fi
 
     local build_dirname
-    build_dirname=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
-            rpmspec --query --define "_topdir ${worktree}" "${RPM_OPTS[@]}" --qf "${build_dirname_query_filter}" /dev/stdin | \
-            awk 'NR == 1'
-         )
+    build_dirname=$(query_format_spec_file "${worktree}" \
+                                           "${revision}" \
+                                           "${build_dirname_query_filter}")
 
     local build_dir
     build_dir="${worktree}/BUILD/${build_dirname}"
     if [[ ! -d "${build_dir}" ]] ; then
         # rpmbuild version 6.x are building in a sub-directory
-        build_dir="${worktree}/BUILD/${build_dirname}-build/${build_dirname}"
+        build_dirname=$(query_format_spec_file "${worktree}" \
+                                               "${revision}" \
+                                               "%{name}-%{version}-build/${build_dirname}")
+        build_dir="${worktree}/BUILD/${build_dirname}"
     fi
 
     if [[ ! -d "${build_dir}" ]]; then
