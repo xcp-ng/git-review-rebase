@@ -39,7 +39,7 @@ function usage() {
     exit "${1}"
 }
 
-while getopts ":ac:s:fh" opt; do
+while getopts ":ac:s:dfh" opt; do
     case "${opt}" in
     a)
         IMPORT_ALL=true
@@ -49,6 +49,9 @@ while getopts ":ac:s:fh" opt; do
         ;;
     s)
         SRPM_REPO_PATH="$(realpath "${OPTARG}")"
+        ;;
+    d)
+        OOT_DRIVER_IMPORT=true
         ;;
     f)
         FORCE_IMPORT=1
