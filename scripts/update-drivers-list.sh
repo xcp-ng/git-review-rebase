@@ -93,11 +93,11 @@ function generate_table() {
 
 	[ -n "$normal_raw" ] && {
 	    normal="[$normal_raw](https://github.com/xcp-ng-rpms/$pkg/blob/$(git -C "$srpm_dir/$pkg" rev-parse HEAD))"
-	    normal="[📜](https://github.com/xcp-ng-rpms/$pkg/blob/$(git -C "$source_dir/$pkg" rev-parse HEAD)) $normal"
+	    normal="[📜](https://github.com/xcp-ng/driver-sources/blob/$(git -C "$source_dir/$pkg" rev-parse HEAD)) $normal"
 	}
 	[ -n "$alt_raw" ] && {
 	    alt="[$alt_raw](https://github.com/xcp-ng-rpms/${pkg}-alt/blob/$(git -C "$srpm_dir/$pkg-alt" rev-parse HEAD))"
-	    alt="[📜](https://github.com/xcp-ng-rpms/${pkg}-alt/blob/$(git -C "$source_dir/$pkg-alt" rev-parse HEAD)) $alt"
+	    alt="[📜](https://github.com/xcp-ng/driver-sources/blob/$(git -C "$source_dir/$pkg-alt" rev-parse HEAD)) $alt"
 	}
 
         if [ -n "$normal_raw" ] && [ -n "$alt_raw" ] && [ "$normal_raw" != "$alt_raw" ]; then
