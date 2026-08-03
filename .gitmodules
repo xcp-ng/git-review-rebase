@@ -265,9 +265,9 @@
 [submodule "driver-disks"]
 	path = driver-disks
 	url = git@github.com:xcp-ng/driver-disks.git
-[submodule "drivers/8.3/srpm/qlogic-fastlinq-alt_8.42"]
-	path = drivers/8.3/srpm/qlogic-fastlinq-alt_8.42
-	url = git@github.com:xcp-ng-rpms/qlogic-fastlinq-alt_8.42.git
-[submodule "drivers/8.3/source/qlogic-fastlinq-alt_8.42"]
-	path = drivers/8.3/source/qlogic-fastlinq-alt_8.42
+[submodule "drivers/8.3/srpm/qlogic-fastlinq-alt_8_42"]
+	path = drivers/8.3/srpm/qlogic-fastlinq-alt_8_42
+	url = git@github.com:xcp-ng-rpms/qlogic-fastlinq-alt_8_42.git
+[submodule "drivers/8.3/source/qlogic-fastlinq-alt_8_42"]
+	path = drivers/8.3/source/qlogic-fastlinq-alt_8_42
 	url = git@github.com:xcp-ng/driver-sources.git
