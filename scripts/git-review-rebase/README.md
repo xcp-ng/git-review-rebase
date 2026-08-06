@@ -20,9 +20,14 @@ An interactive TUI (Terminal User Interface) tool for reviewing rebased git bran
   | ---- | ----------------------------------------- |
   | `=`  | Same commit (identical SHA1               |
   | `~`  | Loose match (same title, patchid changed) |
+  | `✎`  | Commit message changed                    |
   | `⤶`  | Already present in new upstream           |
   | `✗`  | Dropped during rebase                     |
   | `✚`  | Added in rebase                           |
+
+> A commit message comparison ignores trailing whitespace and surrounding blank lines, so `✎`
+> only shows up when the message content itself differs. It is never set on `=` matches, since
+> those commits are identical by definition.
 
 > **Patchid** is a checksum of a commit's diff (`git patch-id`). Two commits with different
 > SHA1 (e.g. after rebase) that introduce the same code changes will have the same patchid.

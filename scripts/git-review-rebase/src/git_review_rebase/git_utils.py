@@ -40,6 +40,16 @@ def commit_title(commit: pygit2.Commit) -> str:
     return (commit.message.splitlines() or [""])[0]
 
 
+def normalized_message(commit: pygit2.Commit) -> str:
+    """Commit message without trailing whitespace nor surrounding blank lines."""
+    return "\n".join(line.rstrip() for line in commit.message.strip().splitlines())
+
+
+def message_changed(left_commit: pygit2.Commit, right_commit: pygit2.Commit) -> bool:
+    """Return True if both commits do not share the same message."""
+    return normalized_message(left_commit) != normalized_message(right_commit)
+
+
 def cached_patchid_ref(revision: str) -> str:
     """Poor man's cache in git refs directly using merkle trees."""
     return f"refs/patchids/from_revision/" f"{revision[:2]}/{revision[2:4]}/{revision[4:]}"
