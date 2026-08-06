@@ -6,7 +6,7 @@ import pygit2
 
 from .branch_range import BranchRange
 from .constants import CommitMatchInfoFlag
-from .git_utils import abbrev, commit_title
+from .git_utils import abbrev, commit_title, message_changed
 
 
 class RebasedCommitMatch:
@@ -66,6 +66,13 @@ class RebasedCommitsMatches:
                 right_commit = self.right_range._commit_by_title.get(commit_title(left_commit))
                 if right_commit is not None:
                     match_info = CommitMatchInfoFlag.LooseMatch
+
+            if (
+                right_commit is not None
+                and right_commit.id != left_commit.id
+                and message_changed(left_commit, right_commit)
+            ):
+                match_info |= CommitMatchInfoFlag.MessageChanged
 
             if (
                 right_commit is not None

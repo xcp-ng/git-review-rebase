@@ -28,6 +28,7 @@ class SolarizedColors(StrEnum):
 class CommitMatchInfoFlag(Flag):
     SameCommit = auto()
     LooseMatch = auto()
+    MessageChanged = auto()
     PresentInRebaseOnto = auto()
     Dropped = auto()
     Added = auto()
@@ -48,6 +49,11 @@ commit_match_info_repr = {
         CommitMatchInfoFlag.LooseMatch,
         Text("~", SolarizedColors.Yellow),
         "Commit patchid has changed",
+    ),
+    CommitMatchInfoFlag.MessageChanged: CommitMatchInfo(
+        CommitMatchInfoFlag.MessageChanged,
+        Text("✎", SolarizedColors.Orange),
+        "Commit message has changed",
     ),
     CommitMatchInfoFlag.PresentInRebaseOnto: CommitMatchInfo(
         CommitMatchInfoFlag.PresentInRebaseOnto,
