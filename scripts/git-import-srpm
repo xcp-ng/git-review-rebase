@@ -35,20 +35,17 @@ set -o pipefail
 THIS_SCRIPT="$(readlink -f "$0")"
 
 function usage() {
-    echo "Usage: $(basename "${THIS_SCRIPT}") [-c CODE_REPO_PATH] [-s SRPM_REPO_PATH] [-f] REVISION"
+    echo "Usage: $(basename "${THIS_SCRIPT}") [-c CODE_REPO_PATH] [-s SRPM_REPO_PATH] [-f] [-d] [-D] [-N] -a|REVISION"
     exit "${1}"
 }
 
-while getopts ":ac:s:dDfh" opt; do
+while getopts ":ac:dDfhNs:" opt; do
     case "${opt}" in
     a)
         IMPORT_ALL=true
         ;;
     c)
         CODE_REPO_PATH="$(realpath "${OPTARG}")"
-        ;;
-    s)
-        SRPM_REPO_PATH="$(realpath "${OPTARG}")"
         ;;
     d)
         OOT_DRIVER_IMPORT=true
@@ -58,6 +55,12 @@ while getopts ":ac:s:dDfh" opt; do
         ;;
     f)
         FORCE_IMPORT=1
+        ;;
+    N)
+        NO_MANUAL_PATCHES=1
+        ;;
+    s)
+        SRPM_REPO_PATH="$(realpath "${OPTARG}")"
         ;;
     h|*)
         if [ "${opt}" = "h" ]; then usage 0; else usage 1; fi
@@ -597,7 +600,7 @@ rpmbuild --nodeps \
          -bp "${SRPM_REPO_WORKTREE}/${SPEC_FILE}" |& sed 's/^/(rpmbuild)/' >> "${COMMAND_LOGS}"  &
 RPMBUILD_PID=$!
 
-if [[ -z "${OOT_DRIVER_IMPORT}" ]]; then
+if [[ -z "${OOT_DRIVER_IMPORT}" ]] && [[ -z "${NO_MANUAL_PATCHES:-}" ]]; then
     cd "${SRPM_REPO_WORKTREE}"
 
     while IFS= read -r l; do
