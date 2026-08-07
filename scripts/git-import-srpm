@@ -187,19 +187,20 @@ function get_base_version() {
 function get_source_commit() {
     local worktree="$1"
     local revision="$2"
+    local source_commit
 
     check_spec_file "${worktree}" "${revision}"
 
-    if [[ ${PRODUCT} = "edk2" ]]; then
-        local source_commit
+
+    if git -C "${worktree}" show "${revision}:${SPEC_FILE}" | awk '/package_srccommit/{found=1} END{exit !found}'; then
         source_commit=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
-            awk '$1 == "%global" && $2 == "package_srccommit" { print $3; exit }'
-        )
-        if [[ -z ${source_commit} ]]; then
-            source_commit=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
-                awk '$1 == "%global" && $2 == "edk2_githash" { print $3; exit }'
-            )
-        fi
+                           awk '$1 == "%global" && $2 == "package_srccommit" { print $3; exit }'
+                      )
+        echo "${source_commit}"
+    elif [[ ${PRODUCT} = "edk2" ]]; then
+        source_commit=$(git -C "${worktree}" show "${revision}:${SPEC_FILE}" | \
+                            awk '$1 == "%global" && $2 == "edk2_githash" { print $3; exit }'
+                     )
         if [[ -z ${source_commit} ]]; then
             echo "${SPEC_FILE} does not define package_srccommit" 1>&2
             exit 1
