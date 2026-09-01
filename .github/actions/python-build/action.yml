@@ -10,7 +10,7 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - uses: ./.github/actions/uv-setup/
+    - uses: $/.github/actions/uv-setup/
       with:
         sync: false
         working-directory: ${{ inputs.working-directory }}
