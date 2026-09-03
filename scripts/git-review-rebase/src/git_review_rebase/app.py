@@ -127,23 +127,23 @@ class GitReviewRebase(App):
     async def load_ranges(self) -> None:
         assert self.rebase_table is not None
         merge_base = self.repo.merge_base(
-            oid(self.repo, self.args.left_range.split("..")[1]),
-            oid(self.repo, self.args.right_range.split("..")[1]),
+            oid(self.repo, self.args.left_range.split("..")[1] + "^{commit}"),
+            oid(self.repo, self.args.right_range.split("..")[1] + "^{commit}"),
         )
         self.left_range = await asyncio.to_thread(
             BranchRange,
             self.args,
             self.repo,
-            self.args.left_range.split("..")[0],
-            self.args.left_range.split("..")[1],
+            self.args.left_range.split("..")[0] + "^{commit}",
+            self.args.left_range.split("..")[1] + "^{commit}",
             self.args.cache_flags,
         )
         self.right_range = await asyncio.to_thread(
             BranchRange,
             self.args,
             self.repo,
-            self.args.right_range.split("..")[0],
-            self.args.right_range.split("..")[1],
+            self.args.right_range.split("..")[0] + "^{commit}",
+            self.args.right_range.split("..")[1] + "^{commit}",
             self.args.cache_flags,
             merge_base=merge_base,
         )
